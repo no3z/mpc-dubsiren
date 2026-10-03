@@ -34,6 +34,7 @@
 
 #include "engine.h"
 #include "popup.h"
+#include "parameter_mapping.h"
 
 #define DSP_BLOCK 128
 _Static_assert(ATOMIC_INT_LOCK_FREE == 2 && ATOMIC_CHAR_LOCK_FREE == 2,
@@ -75,7 +76,7 @@ typedef struct {
 enum {
     effOpen = 0, effClose = 1, effGetParamLabel = 6, effGetParamDisplay = 7, effGetParamName = 8,
     effSetSampleRate = 10, effSetBlockSize = 11, effMainsChanged = 12, effGetChunk = 23,
-    effSetChunk = 24, effProcessEvents = 25, effCanBeAutomated = 26, effGetPlugCategory = 35,
+    effSetChunk = 24, effProcessEvents = 25, effCanBeAutomated = 26, effString2Parameter = 27, effGetPlugCategory = 35,
     effGetEffectName = 45, effGetVendorString = 47, effGetProductString = 48,
     effGetVendorVersion = 49, effCanDo = 51, effGetVstVersion = 58,
 };
@@ -106,23 +107,18 @@ static float clamp01(float v) { return !isfinite(v) || v < 0 ? 0 : v > 1 ? 1 : v
 
 /* normalized 0..1 -> DSP display value string */
 static __attribute__((unused)) void norm_to_str(const param_t *p, float n, char *buf, int len) {
-    if (p->nopts) snprintf(buf, len, "%d", (int)lroundf(clamp01(n) * (p->nopts - 1)));
-    else if (p->int_display) snprintf(buf, len, "%ld", lroundf(p->min + (p->max - p->min) * clamp01(n)));   /* round: a bare %g + atoi() truncates, so a sub-step Q-Link nudge never advances */
-    else snprintf(buf, len, "%g", p->min + (p->max - p->min) * clamp01(n));
+    const float physical=parameter_to_physical(p,clamp01(n));
+    if(p->nopts || p->int_display)snprintf(buf,len,"%ld",lroundf(physical));
+    else snprintf(buf,len,"%.9g",physical);
 }
 
 /* DSP display value string (number or enum label) -> normalized 0..1 */
 static float str_to_norm(const param_t *p, const char *s) {
-    if (p->nopts) {
-        int idx = -1;
-        if (isdigit((unsigned char)s[0])) idx = atoi(s);
-        else
-            for (int i = 0; i < p->nopts; i++)
-                if (!strcasecmp(s, p->opts[i])) idx = i;
-        if (idx < 0) idx = 0;
-        return p->nopts > 1 ? clamp01((float)idx / (p->nopts - 1)) : 0;
+    if(p->nopts && !isdigit((unsigned char)s[0])) {
+        for(int i=0;i<p->nopts;++i)if(!strcasecmp(s,p->opts[i]))return p->nopts>1 ? (float)i/(p->nopts-1) : 0;
+        return 0;
     }
-    return p->max > p->min ? clamp01((float)((atof(s) - p->min) / (p->max - p->min))) : 0;
+    return clamp01(parameter_to_normalized(p,(float)atof(s)));
 }
 
 /* Optional port-local numeric path; the sd88me engine function table is unchanged. */
@@ -146,8 +142,7 @@ static float get_norm(wrap_t *w, int i) {
     float physical;
     if (dub_force_get_physical(w->dsp,i,&physical)) {
         const param_t *p=&PARAMS[i];
-        v=p->nopts>1 ? clamp01(physical/(p->nopts-1)) :
-          p->max>p->min ? clamp01((physical-p->min)/(p->max-p->min)) : 0;
+        v=clamp01(parameter_to_normalized(p,physical));
     } else
 #endif
     {
@@ -204,17 +199,17 @@ static void setParameter(AEffect *e, int32_t i, float n) {
          * between options is a Q-Link/encoder nudge from the current one: step one
          * option that way, else small nudges round back and never change state. */
         float pos = clamp01(n) * (p->nopts - 1);
-        if (fabsf(pos - roundf(pos)) > 0.001f) {
+        if (fabsf(pos - (float)(int)(pos+.5f)) > 0.001f) {
             nudge = 1;
             float cur = get_norm(w, i) * (p->nopts - 1);
-            int idx = (int)lroundf(cur) + (pos > cur ? 1 : -1);
+            int idx = (int)(cur+.5f) + (pos > cur ? 1 : -1);
             if (idx < 0) idx = 0;
             if (idx > p->nopts - 1) idx = p->nopts - 1;
             n = (float)idx / (p->nopts - 1);
         }
     }
 #ifdef DUB_TYPED_PARAMETERS
-    float physical=p->nopts ? lroundf(clamp01(n)*(p->nopts-1)) : p->min+(p->max-p->min)*clamp01(n);
+    float physical=parameter_to_physical(p,clamp01(n));
     if(p->int_display && !p->nopts)physical=lroundf(physical);
     dub_force_set_physical(w->dsp,i,physical);
 #else
@@ -341,7 +336,7 @@ static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void
     (void)o;
     if ((op == effGetEffectName || op == effGetProductString || op == effGetVendorString ||
          op == effGetParamName || op == effGetParamLabel || op == effGetParamDisplay ||
-         op == effProcessEvents || op == effCanDo || op == effGetChunk || op == effSetChunk) && !p)
+         op == effProcessEvents || op == effCanDo || op == effGetChunk || op == effSetChunk || op == effString2Parameter) && !p)
         return 0;
     switch (op) {
     case effOpen: return 1;
@@ -393,12 +388,31 @@ static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void
                 if (!pp->int_display && !strcmp(pp->unit, "s")) decimals = 3;
                 else if (!pp->int_display && !strcmp(pp->unit, "Hz"))
                     decimals = fabs(pp->max - pp->min) <= 32 ? 2 : 0;
+                if(pp->logarithmic && atof(buf)<100)decimals=1;
                 snprintf(p, 24, "%.*f", decimals, atof(buf));
             }
         }
         return 1;
     }
     case effSetSampleRate: return isfinite(o) && fabsf(o - 44100.0f) < 0.5f;
+    case effString2Parameter: {
+        /* Native numeric editing uses physical units, including log-scaled Hz. */
+        if(idx<0 || idx>=NPARAMS || popup_is(idx))return 0;
+        const param_t *pp=&PARAMS[idx];
+        if(pp->nopts)for(int i=0;i<pp->nopts;++i)if(!strcasecmp(p,pp->opts[i])){
+            setParameter(e,idx,pp->nopts>1 ? (float)i/(pp->nopts-1) : 0);return 1;
+        }
+        char *end;float physical=strtof(p,&end);
+        if(end==(char*)p || !isfinite(physical))return 0;
+        while(isspace((unsigned char)*end))++end;
+        if(*end)return 0;
+        // Keep integer conversions bounded even for enormous finite text input.
+        const float lo=pp->nopts ? 0.f : pp->min;
+        const float hi=pp->nopts ? (float)(pp->nopts-1) : pp->max;
+        physical=fmaxf(lo,fminf(hi,physical));
+        setParameter(e,idx,clamp01(parameter_to_normalized(pp,physical)));
+        return 1;
+    }
     case effSetBlockSize: return v > 0;
     case effMainsChanged: return 1;
     case effProcessEvents: {

@@ -122,9 +122,12 @@ int main(){
     for(int i=0;i<3000;++i)renderHost(a,128);
     {float l[128],r[128];std::fill_n(l,128,1.f);std::fill_n(r,128,1.f);float* out[]={l,r};b->process(b,nullptr,out,128);bool kept=true;for(int i=0;i<128;++i)kept&=std::abs(l[i]-1)<1e-4&&std::abs(r[i]-1)<1e-4;check(kept,"legacy process adds silence to existing host samples");}
     checkCore();
-    {std::thread controls([a](){for(int i=0;i<5000;++i){a->setParameter(a,dub::P_pitch,float(i%1000)/999);a->setParameter(a,dub::P_wave,float(i%5)/4);a->setParameter(a,dub::P_fire,(i%83==0)?1:0);}});
+    {std::thread controls([a](){for(int i=0;i<5000;++i){if(i%19==0)a->setParameter(a,dub::P_preset,float(i%12)/11);a->setParameter(a,dub::P_pitch,float(i%1000)/999);a->setParameter(a,dub::P_wave,float(i%5)/4);a->setParameter(a,dub::P_fire,(i%83==0)?1:0);}});
      for(int i=0;i<1000;++i)renderHost(a,128);
      controls.join();check(true,"concurrent parameter setters and audio render stress completed");}
+    {float l[128],r[128];float* out[]={l,r};note(a,true);
+     for(int i=0;i<2400;++i){inAudio=true;a->setParameter(a,dub::P_preset,float(i%12)/11);a->setParameter(a,dub::P_wave,float(i%5)/4);a->processReplacing(a,nullptr,out,128);inAudio=false;}
+     check(audioAllocations==0 && audioFrees==0,"rapid preset/wave changes and render allocate/free nothing");}
     check(audioAllocations==0 && audioFrees==0,"audio rendering makes no intercepted heap allocations or frees");
     std::printf("Audio heap operations: allocations=%u frees=%u\n",audioAllocations,audioFrees);
     a->dispatcher(a,1,0,0,nullptr,0);b->dispatcher(b,1,0,0,nullptr,0);

@@ -5,6 +5,7 @@ Three design passes share the exact parameter wiring. Preview images compose the
 same PNGs and bounds as the native JSON; live labels use parameter defaults.
 """
 import json
+import math
 import pathlib
 import shutil
 import sys
@@ -48,7 +49,7 @@ FADERS = [
     ("reverb","REVERB",1076,106,176,154,1),("output","OUTPUT",1076,276,176,154,1),
 ]
 SELECTORS = [
-    ("wave",["SQUARE","SAW","TRI","SINE","NOISE"],28,198,208,40,3),
+    ("wave",["SINE","TRI","SAW","SQUARE","NOISE"],28,198,208,40,3),
     ("mode",["SIREN","ZAP"],28,294,208,38,2),
     ("lfo_wave",["TRI","SQR","SAW","SINE"],268,280,258,38,4),
     ("filter_type",["LP","BP","HP"],558,286,178,40,3),
@@ -62,8 +63,8 @@ BUTTONS = [
     ("bend","BEND",862,558,86,44,"toggle"),("invert","INVERT",956,558,88,44,"toggle"),
     ("kill","KILL",1076,464,176,48,"toggle"),("stop","STOP",1076,526,176,62,"stop"),
 ]
-PRIMARY = ["pitch","rate","depth","zap_sweep","cutoff","resonance","delay_time","feedback"]
-SECONDARY = ["attack","release","lfo2_amount","lfo3_amount","delay_mix","ping","reverb","output"]
+PRIMARY = ["pitch","wave","rate","depth","zap_sweep","cutoff","delay_time","feedback"]
+SECONDARY = ["resonance","preset","attack","release","delay_mix","ping","reverb","output"]
 UTILITY = ["osc_low","osc_mid","osc_high","master_low","master_mid","master_high",
            "fast","slow","oct_up","oct_down"]
 POPUPS = ["preset","wave","lfo_wave","mode","filter_type","character"]
@@ -205,7 +206,7 @@ class Panel:
             action("Enter Pressed","Show Overlay","knob overlay")]))
         self.placed(localkey,label,key,(x,y,w,h))
         lo,hi=p.get("min",0),p.get("max",1)
-        n=(physical_default(p)-lo)/(hi-lo) if hi>lo else 0
+        n=math.log(physical_default(p)/lo)/math.log(hi/lo) if p.get("scale")=="log" else (physical_default(p)-lo)/(hi-lo) if hi>lo else 0
         frame_index=round(n*(frames-1))
         frame=strip.crop((0,frame_index*track_h,track_w,(frame_index+1)*track_h))
         self.image.paste(frame,(x+4,y+title_h),frame)

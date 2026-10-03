@@ -38,14 +38,35 @@ struct Biquad {
     float cachedHz=-1,cachedQ=-1,cachedGain=999,cachedSr=-1;int cachedType=-1;
     bool unity=true;
     float eqHz=-1;double eqCos=1,eqSin=0;
-    void reset() noexcept{z1=z2=0;}
-    float process(float in) noexcept {
-        if(unity && z1==0 && z2==0)return in;
-        const double y=b0*in+z1;z1=b1*in-a1*y+z2;z2=b2*in-a2*y;
-        if(!std::isfinite(y) || std::fabs(y)>100 || !std::isfinite(z1) || !std::isfinite(z2)){reset();return 0;}
+    void scrub() noexcept {
         if(std::fabs(z1)<1e-25)z1=0;
         if(std::fabs(z2)<1e-25)z2=0;
+    }
+    // Stereo channels share coefficients, never their independent histories.
+    void coefficientsFrom(const Biquad& q) noexcept {
+        if(cachedType==q.cachedType && cachedHz==q.cachedHz && cachedQ==q.cachedQ &&
+           cachedGain==q.cachedGain && cachedSr==q.cachedSr)return;
+        b0=q.b0;b1=q.b1;b2=q.b2;a1=q.a1;a2=q.a2;unity=q.unity;
+        cachedType=q.cachedType;cachedHz=q.cachedHz;cachedQ=q.cachedQ;
+        cachedGain=q.cachedGain;cachedSr=q.cachedSr;
+        eqHz=q.eqHz;eqCos=q.eqCos;eqSin=q.eqSin;
+    }
+    void reset() noexcept{z1=z2=0;}
+    float processState(float in,double& one,double& two) const noexcept {
+        if(unity && one==0 && two==0)return in;
+        const double y=b0*in+one;one=b1*in-a1*y+two;two=b2*in-a2*y;
+        // Bounded finite coefficients, float input and |y|<=100 keep both double
+        // states finite by induction. This comparison also rejects NaN/Inf.
+        // Sub-audible state cleanup runs every 32 samples, before denormals can
+        // approach the double subnormal range, instead of twice per sample.
+        if(!(std::fabs(y)<=100)){one=two=0;return 0;}
         return float(y);
+    }
+    float process(float in) noexcept {return processState(in,z1,z2);}
+    void processStereo(Biquad& right,float& l,float& r) noexcept {
+        // Coefficients are synchronized by coefficientsFrom; the histories stay
+        // independent. Both channels can reuse the same coefficient loads.
+        l=processState(l,z1,z2);r=processState(r,right.z1,right.z2);
     }
     void tone(int type,float hz,float qDb,float sr=44100) noexcept {
         if(type==cachedType && hz==cachedHz && qDb==cachedQ && sr==cachedSr)return;

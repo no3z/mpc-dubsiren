@@ -8,8 +8,8 @@ Indices are persistent VST project-state identifiers. Never reorder existing key
 | 1 | `latch` | OFF, ON | 0 |  |
 | 2 | `preset` | Air Raid, Laser, Fog Horn, Police, UFO, Space Echo, Smoke, Clash, Heavy Dub, Deep Orbit, Feedback Madness, Sci-Fi Alarm | 0 |  |
 | 3 | `mode` | SIREN, ZAP | 0 |  |
-| 4 | `wave` | SQUARE, SAW, TRIANGLE, SINE, NOISE | 0 |  |
-| 5 | `pitch` | 60 .. 2400 | 620 | Hz |
+| 4 | `wave` | SINE, TRIANGLE, SAW, SQUARE, NOISE | 3 |  |
+| 5 | `pitch` | 10 .. 2400 | 620 | Hz |
 | 6 | `level` | 0 .. 100 | 70 | % |
 | 7 | `noise` | 0 .. 100 | 0 | % |
 | 8 | `lfo_wave` | TRIANGLE, SQUARE, SAW, SINE | 0 |  |
@@ -56,4 +56,4 @@ Indices are persistent VST project-state identifiers. Never reorder existing key
 | 49 | `master_mid` | -24 .. 12 | 0 | dB |
 | 50 | `master_high` | -24 .. 12 | 0 | dB |
 
-All continuous touchscreen mappings are linear in displayed units, as in BARZINE. FIRE is a 250 ms tap trigger (or complete one-shot ZAP); MIDI notes provide press/release and LATCH sustains. Modifier buttons are toggles because native touch release is unconfirmed. STOP clears performance holds, gates and FX tails. Presets are complete native snapshots; character selection recalls its source effect settings.
+Pitch uses logarithmic 10–2400 Hz mapping; other continuous controls are linear. Wave names follow SINE, TRIANGLE, SAW, SQUARE, NOISE externally while saved engine waveform IDs stay unchanged. FIRE is a 250 ms tap trigger (or complete one-shot ZAP); MIDI notes provide press/release and LATCH sustains. Modifier buttons are toggles because native touch release is unconfirmed. STOP clears performance holds, gates and FX tails. Presets are complete native snapshots; character selection recalls its source effect settings.

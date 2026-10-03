@@ -40,6 +40,9 @@ build_target() {
     "$cxx" "${special[@]}" "${objects[@]}" "$out/integration.o" -lm \
       -pthread -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free -o "$out/integration_test"
     ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 "$out/integration_test"
+    "$cxx" -std=c++17 "${common[@]}" "${special[@]}" -Itests tests/performance_controls.cpp \
+      "${objects[@]}" -lm -ldl -o "$out/performance_controls"
+    ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 "$out/performance_controls"
     if [[ -f src/effects.cpp && -f tests/effects_test.cpp ]]; then
       "$cxx" -std=c++17 "${common[@]}" "${special[@]}" src/effects.cpp tests/effects_test.cpp \
         -lm -o "$out/effects_test"

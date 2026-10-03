@@ -1,5 +1,9 @@
 # Reproducing release candidate 1.0.1
 
+Historical 1.0.1 record. Current 1.0.2 results and compatibility limits are in
+[PERFORMANCE_1.0.2.md](PERFORMANCE_1.0.2.md).
+For the old build commands below, use source commit `bb02086`; current main builds 1.0.2.
+
 Two separate source copies without `build/` or `dist/` reproduced the same ARM
 binary and ZIP. First build ran `./tools/build.sh all`; second ran
 `./tools/build.sh arm`. Both packaged with `./tools/package.sh`, which generates

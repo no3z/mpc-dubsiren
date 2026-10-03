@@ -9,8 +9,8 @@ num('fire','FIRE',0,1,0,momentary=True,hold_ms=250)
 opt('latch','LATCH','OFF,ON')
 opt('preset','PRESET','Air Raid,Laser,Fog Horn,Police,UFO,Space Echo,Smoke,Clash,Heavy Dub,Deep Orbit,Feedback Madness,Sci-Fi Alarm')
 opt('mode','MODE','SIREN,ZAP')
-opt('wave','WAVE','SQUARE,SAW,TRIANGLE,SINE,NOISE')
-num('pitch','PITCH',60,2400,620,'Hz')
+opt('wave','WAVE','SINE,TRIANGLE,SAW,SQUARE,NOISE',default=3,values=[3,2,1,0,4])
+num('pitch','PITCH',10,2400,620,'Hz',scale='log')
 num('level','SIREN LEVEL',0,100,70,'%')
 num('noise','NOISE MIX',0,100,0,'%')
 opt('lfo_wave','LFO WAVE','TRIANGLE,SQUARE,SAW,SINE')
@@ -48,5 +48,5 @@ Path('src/param_ids.h').write_text('#pragma once\nnamespace dub { enum Param {\n
 if not Path('vst.json').exists(): Path('vst.json').write_text(json.dumps(dict(name='Dub Force Siren',vendor='Dub Force',uid='DbSr',version=1000,so='dub_force_siren.so',params='params.json',layout='layout.conf',build=dict(root='.',sources=['src/engine.cpp','src/siren.cpp','src/effects.cpp'],cflags=['-Isrc','-Ivendor/mpc-vst-plugins/wrapper'],libs=['-lm'])),indent=2)+'\n')
 rows=['# Parameters','', 'Indices are persistent VST project-state identifiers. Never reorder existing keys.','', '| Index | Key | Range / options | Default | Units |','|---:|---|---|---|---|']
 for i,p in enumerate(P): rows.append(f"| {i} | `{p['key']}` | {', '.join(p['options']) if 'options' in p else str(p['min'])+' .. '+str(p['max'])} | {p['default']} | {p.get('unit','')} |")
-rows+=['','All continuous touchscreen mappings are linear in displayed units, as in BARZINE. FIRE is a 250 ms tap trigger (or complete one-shot ZAP); MIDI notes provide press/release and LATCH sustains. Modifier buttons are toggles because native touch release is unconfirmed. STOP clears performance holds, gates and FX tails. Presets are complete native snapshots; character selection recalls its source effect settings.']
+rows+=['','Pitch uses logarithmic 10–2400 Hz mapping; other continuous controls are linear. Wave names follow SINE, TRIANGLE, SAW, SQUARE, NOISE externally while saved engine waveform IDs stay unchanged. FIRE is a 250 ms tap trigger (or complete one-shot ZAP); MIDI notes provide press/release and LATCH sustains. Modifier buttons are toggles because native touch release is unconfirmed. STOP clears performance holds, gates and FX tails. Presets are complete native snapshots; character selection recalls its source effect settings.']
 Path('docs/PARAMETERS.md').write_text('\n'.join(rows)+'\n')

@@ -12,59 +12,77 @@
 namespace dub {
 namespace {
 constexpr float Fs=44100.f, Pi=3.14159265358979323846f;
+#ifndef DUB_FX_CONTROL_INTERVAL
+#define DUB_FX_CONTROL_INTERVAL 16
+#endif
+constexpr unsigned ControlInterval=DUB_FX_CONTROL_INTERVAL;
+static_assert(ControlInterval==8 || ControlInterval==16 || ControlInterval==32);
+// Internal finite-by-construction paths retain their amplitude bounds without
+// repeating the nonfinite test performed at the external/signal boundaries.
+float limited(float x,float lo,float hi) noexcept {return std::max(lo,std::min(hi,x));}
 float bounded(float x,float lo,float hi,float fallback=0.f) noexcept {
     return std::isfinite(x) ? std::max(lo,std::min(hi,x)) : fallback;
 }
 float clean(float x) noexcept {
     return std::isfinite(x) && std::fabs(x)>1e-20f ? x : 0.f;
 }
+// Ring/reverb values are finite by construction: all external inputs and comb
+// feedback writes are bounded, and the two allpasses have stable gain .5.
+// Keep denormal suppression here; nonfinite guards remain at public/signal bounds.
+float denormal(float x) noexcept {return std::fabs(x)>1e-20f ? x : 0.f;}
 struct Slew {
-    float value,increment=0,end=0;unsigned remaining=0;
-    Slew(float initial):value(initial){}
+    float value,increment=0,end;
+    Slew(float initial):value(initial),end(initial){}
     operator float() const noexcept{return value;}
-    Slew& operator=(float next) noexcept{value=next;return *this;}
 };
-float approach(Slew& state,float target,float a) noexcept {
-    if(!state.remaining){
-        state.end=state.value+a*(target-state.value);
-        if(state.end==state.value || std::fabs(state.end-target)<1e-9f)state.end=target;
-        state.increment=(state.end-state.value)*(1.f/16);state.remaining=16;
-    }
-    --state.remaining;
-    return state.remaining ? state.value+state.increment : state.end;
+void target(Slew& state,float next,float a) noexcept {
+    state.end=state.value+a*(next-state.value);
+    if(state.end==state.value || std::fabs(state.end-next)<1e-9f)state.end=next;
+    state.increment=(state.end-state.value)*(1.f/ControlInterval);
 }
-float coefficient(float seconds) noexcept { return 1.f-std::exp(-16.f/(Fs*seconds)); }
+float coefficient(float seconds) noexcept { return 1.f-std::exp(-float(ControlInterval)/(Fs*seconds)); }
 
-// Each slot carries a reset generation. Reset is constant-time and never clears
-// large buffers in the audio callback. Unwritten slots read as digital silence.
+// Reset is constant-time. Distance from the write head tells whether a slot
+// has been written since reset; no per-slot generation tags are needed.
 struct Ring {
     std::vector<float> samples;
-    std::vector<std::uint64_t> stamps;
-    std::size_t write=0;
-    std::uint64_t generation=1;
-    explicit Ring(std::size_t size):samples(size,0.f),stamps(size,0){}
-    float at(std::size_t index) const noexcept {
-        return stamps[index]==generation ? samples[index] : 0.f;
-    }
+    std::size_t write=0,valid=0;
+    explicit Ring(std::size_t size):samples(size,0.f){}
     float read(float delaySamples) const noexcept {
-        const float delay=bounded(delaySamples,1.f,float(samples.size()-2),1.f);
+        const float delay=limited(delaySamples,1.f,float(samples.size()-2));
         const auto integral=std::size_t(delay);
         const float fraction=delay-float(integral);
         const auto one=write>=integral ? write-integral : write+samples.size()-integral;
         const auto two=one ? one-1 : samples.size()-1;
-        const float x=at(one);
-        return x+fraction*(at(two)-x);
-    }
-    float readFixed() const noexcept {
-        // These comb/allpass rings always read size-2 samples behind write.
-        const auto index=write+2;
-        return at(index>=samples.size() ? index-samples.size() : index);
+        const float x=integral<=valid ? samples[one] : 0.f;
+        const float y=integral+1<=valid ? samples[two] : 0.f;
+        return x+fraction*(y-x);
     }
     void push(float value) noexcept {
-        samples[write]=clean(value); stamps[write]=generation;
-        if (++write==samples.size()) write=0;
+        samples[write]=denormal(value);
+        if(valid<samples.size())++valid;
+        if(++write==samples.size())write=0;
     }
-    void reset() noexcept { ++generation; write=0; }
+    void reset() noexcept {valid=write=0;}
+};
+
+// A fixed integer delay reads at the write head. Unlike fractional taps it
+// needs no second index or wrap calculation. Reset still invalidates in O(1).
+struct FixedRing {
+    std::vector<float> samples;
+    std::size_t write=0,valid=0;
+    explicit FixedRing(std::size_t size):samples(size,0.f){}
+    // Every comb/allpass pairs exactly one read with one push. Count filling
+    // here, so push needs no second validity comparison on each audio sample.
+    float read() noexcept {
+        if(valid<samples.size()){++valid;return 0.f;}
+        return samples[write];
+    }
+    void push(float value) noexcept {
+        samples[write]=denormal(value);
+        if(++write==samples.size())write=0;
+    }
+    void reset() noexcept {write=valid=0;}
 };
 
 struct Biquad {
@@ -127,23 +145,23 @@ struct Panner {
 };
 
 struct Comb {
-    Ring ring;
+    FixedRing ring;
     float gain,damped=0.f;
-    explicit Comb(int length):ring(std::size_t(length+2)),gain(std::pow(.001f,float(length)/Fs/1.8f)){}
+    explicit Comb(int length):ring(std::size_t(length)),gain(std::pow(.001f,float(length)/Fs/1.8f)){}
     float process(float x) noexcept {
-        const float y=ring.readFixed();
-        damped=clean(.75f*y+.25f*damped);
-        ring.push(bounded(x+gain*damped,-8.f,8.f));
+        const float y=ring.read();
+        damped=denormal(.75f*y+.25f*damped);
+        ring.push(limited(x+gain*damped,-8.f,8.f));
         return y;
     }
     void reset() noexcept { ring.reset(); damped=0.f; }
 };
 struct Allpass {
-    Ring ring;
-    explicit Allpass(int length):ring(std::size_t(length+2)){}
+    FixedRing ring;
+    explicit Allpass(int length):ring(std::size_t(length)){}
     float process(float x) noexcept {
-        const float z=ring.readFixed();
-        const float output=clean(z-.5f*x);
+        const float z=ring.read();
+        const float output=denormal(z-.5f*x);
         ring.push(x+.5f*output);
         return output;
     }
@@ -151,11 +169,15 @@ struct Allpass {
 };
 
 struct Reverb {
+    bool pristine=true;
     std::array<Comb,4> left{{Comb(1557),Comb(1617),Comb(1491),Comb(1422)}};
     std::array<Comb,4> right{{Comb(1580),Comb(1640),Comb(1514),Comb(1445)}};
     std::array<Allpass,2> apLeft{{Allpass(225),Allpass(556)}};
     std::array<Allpass,2> apRight{{Allpass(248),Allpass(579)}};
     Stereo process(float x) noexcept {
+        // Zero input into zero history is exactly zero. Once excited, always
+        // run the network, including when its wet gain is zero, to keep tails.
+        if(pristine){if(x==0.f)return {0.f,0.f};pristine=false;}
         Stereo y{0.f,0.f};
         for (auto& comb:left) y.left+=comb.process(x*.22f);
         for (auto& comb:right) y.right+=comb.process(x*.22f);
@@ -164,6 +186,7 @@ struct Reverb {
         return y;
     }
     void reset() noexcept {
+        pristine=true;
         for (auto& comb:left) comb.reset();
         for (auto& comb:right) comb.reset();
         for (auto& ap:apLeft) ap.reset();
@@ -208,19 +231,20 @@ struct Effects::Impl {
         phase=panPhase=flangePhase=driftPhase=0.f;
         count=sendRelease=0; wasFreeze=wasBend=freezeFeedbackRelease=freezeSendRelease=false;
     }
-    float oscillator(float& p,float hz,bool square=false) noexcept {
-        const float result=square ? (p<.5f?1.f:-1.f) : modulationSine(p);
+    float oscillator(float& p,float hz,bool square=false,bool audible=true) noexcept {
+        const float result=!audible ? 0.f : square ? (p<.5f?1.f:-1.f) : modulationSine(p);
         p+=hz/Fs;
         if (p>=1.f) p-=1.f;
         return result;
     }
-    void process(float dry,const EchoConfig& config,float& l,float& r) noexcept {
-        dry=bounded(dry,-8.f,8.f);
+    // Parameter bounds, character choices and slew endpoints run at control rate.
+    // Only the linear ramp and signal processing run per sample.
+    void controls(const EchoConfig& config) noexcept {
         const int index=std::max(0,std::min(4,config.character));
         const Character& c=Characters[index];
         const float userTime=bounded(config.time,.05f,3.f,.4166667f);
         const float targetTime=config.bend ? std::min(5.2f,1.72f*userTime) : userTime;
-        time=approach(time,targetTime,config.bend ? a120 : (wasBend?a180:a50));
+        target(time,targetTime,config.bend ? a120 : (wasBend?a180:a50));
         // Keep the release time constant for the complete bend transition.
         if (std::fabs(time-targetTime)<.00001f) wasBend=config.bend;
         if (config.bend) wasBend=true;
@@ -232,37 +256,71 @@ struct Effects::Impl {
         if (config.freeze) {
             sendRelease=0;freezeFeedbackRelease=freezeSendRelease=false;
         }
-        feedback=approach(feedback,config.freeze ? std::min(.96f,std::max(.955f,userFb)) : userFb,config.freeze?a40:(freezeFeedbackRelease?a50:a20));
+        target(feedback,config.freeze ? std::min(.96f,std::max(.955f,userFb)) : userFb,config.freeze?a40:(freezeFeedbackRelease?a50:a20));
         if (!config.freeze&&std::fabs(feedback-userFb)<.00001f) freezeFeedbackRelease=false;
         wasFreeze=config.freeze;
         const float targetSend=config.freeze || (index==4&&!config.playing) ? .0001f : 1.f;
-        if (sendRelease>0) --sendRelease;
-        else send=approach(send,targetSend,config.freeze?a15:(freezeSendRelease?a20:a12));
+        if (sendRelease>0) target(send,float(send),a12);
+        else target(send,targetSend,config.freeze?a15:(freezeSendRelease?a20:a12));
         if (std::fabs(send-targetSend)<.00001f) freezeSendRelease=false;
-        hp=approach(hp,bounded(config.hp,40.f,1200.f,120.f),a25);
-        lp=approach(lp,bounded(config.lp,800.f,12000.f,7600.f),a25);
+        target(hp,bounded(config.hp,40.f,1200.f,120.f),a25);
+        target(lp,bounded(config.lp,800.f,12000.f,7600.f),a25);
         const float mix=bounded(config.mix,0.f,1.f,1.f);
         const float polarity=config.invert ? -1.f : 1.f;
         const float duck=config.playing ? 1.f-c.duck : 1.f;
-        wet=approach(wet,c.wet*mix*duck*polarity,config.playing?a18:a140);
-        spreadGain=approach(spreadGain,c.spread*mix*duck*polarity,config.playing?a18:a140);
-        reverbGain=approach(reverbGain,bounded(config.reverb,0.f,1.f,.16f)*(config.playing?1.f-.65f*c.duck:1.f),config.playing?a25:a180);
-        ping=approach(ping,bounded(config.ping,0.f,1.f),a25);
-        panBase=approach(panBase,config.ping>.0001f?0.f:c.panBase,a25);
-        panRate=approach(panRate,bounded(1.f/(2.f*targetTime),.05f,10.f),a80);
-        modRate=approach(modRate,c.modRate,a40); modDepth=approach(modDepth,c.modDepth,a40);
-        wander=approach(wander,c.wander,a40); filterSweep=approach(filterSweep,c.filterSweep,a40);
-        spreadTime=approach(spreadTime,c.spreadTime,a40); spreadPan=approach(spreadPan,c.spreadPan,a40);
-        flangeTime=approach(flangeTime,c.flangeTime,a40); flangeDepth=approach(flangeDepth,c.flangeDepth,a40);
-        flangeRate=approach(flangeRate,c.flangeRate,a40); flangeGain=approach(flangeGain,c.flange,a40);
-        tapeNoise=approach(tapeNoise,c.noise,a40);
-        // Source changes drive immediately when selecting character.
+        target(wet,c.wet*mix*duck*polarity,config.playing?a18:a140);
+        target(spreadGain,c.spread*mix*duck*polarity,config.playing?a18:a140);
+        target(reverbGain,bounded(config.reverb,0.f,1.f,.16f)*(config.playing?1.f-.65f*c.duck:1.f),config.playing?a25:a180);
+        target(ping,bounded(config.ping,0.f,1.f),a25);
+        target(panBase,config.ping>.0001f?0.f:c.panBase,a25);
+        target(panRate,bounded(1.f/(2.f*targetTime),.05f,10.f),a80);
+        target(modRate,c.modRate,a40); target(modDepth,c.modDepth,a40);
+        target(wander,c.wander,a40); target(filterSweep,c.filterSweep,a40);
+        target(spreadTime,c.spreadTime,a40); target(spreadPan,c.spreadPan,a40);
+        target(flangeTime,c.flangeTime,a40); target(flangeDepth,c.flangeDepth,a40);
+        target(flangeRate,c.flangeRate,a40); target(flangeGain,c.flange,a40);
+        target(tapeNoise,c.noise,a40);
+        // Character drive follows selection at the next control boundary.
         drive=c.drive;
-        const float modulation=oscillator(phase,modRate);
-        const auto segment=unsigned(driftPhase);
-        const float position=driftPhase-float(segment);
-        const float eased=position*position*(3.f-2.f*position);
-        const float driftValue=drift[segment]+eased*(drift[segment+1]-drift[segment]);
+    }
+    template<bool Final> void advance() noexcept {
+        const auto step=[](Slew& s){s.value=Final ? s.end : s.value+s.increment;};
+        step(time);
+        step(feedback);
+        step(send);
+        step(hp);
+        step(lp);
+        step(wet);
+        step(spreadGain);
+        step(reverbGain);
+        step(ping);
+        step(panBase);
+        step(panRate);
+        step(modRate);
+        step(modDepth);
+        step(wander);
+        step(filterSweep);
+        step(spreadTime);
+        step(spreadPan);
+        step(flangeTime);
+        step(flangeDepth);
+        step(flangeRate);
+        step(flangeGain);
+        step(tapeNoise);
+    }
+    void process(float dry,const EchoConfig& config,float& l,float& r) noexcept {
+        dry=bounded(dry,-8.f,8.f);
+        if((count&(ControlInterval-1))==0)controls(config);
+        if((count&(ControlInterval-1))==ControlInterval-1)advance<true>();else advance<false>();
+        if(sendRelease>0)--sendRelease;
+        const float modulation=oscillator(phase,modRate,false,modDepth!=0.f || filterSweep!=0.f);
+        float driftValue=0.f;
+        if(wander!=0.f){
+            const auto segment=unsigned(driftPhase);
+            const float position=driftPhase-float(segment);
+            const float eased=position*position*(3.f-2.f*position);
+            driftValue=drift[segment]+eased*(drift[segment+1]-drift[segment]);
+        }
         driftPhase+=4.f/Fs;
         if (driftPhase>=32.f) driftPhase-=32.f;
         const float delayed=bounded(delay.read((time+modDepth*modulation+wander*driftValue)*Fs),-16.f,16.f);
@@ -278,7 +336,7 @@ struct Effects::Impl {
         }
         // Feedback-only guard: the output limiter cannot protect internal state.
         delay.push(bounded(send*(dry+tapeNoise*noise())+feedback*saturation,-16.f,16.f));
-        const float spreadTap=spread.read(spreadTime*Fs);
+        const float spreadTap=spreadGain!=0.f ? spread.read(spreadTime*Fs) : 0.f;
         spread.push(delayed);
         // The always-connected spread panner makes wetPanInput stereo. Its mono
         // main delay input is upmixed equally into both channels before panning.
@@ -287,13 +345,13 @@ struct Effects::Impl {
         output.left+=side.left; output.right+=side.right;
         const float pan=panBase+ping*oscillator(panPhase,panRate,true);
         output=stereoPan.stereo(output,pan);
-        const float flangeMod=oscillator(flangePhase,flangeRate);
-        const float flangeTap=flange.read((flangeTime+flangeDepth*flangeMod)*Fs);
+        const float flangeMod=oscillator(flangePhase,flangeRate,false,flangeDepth!=0.f && flangeGain!=0.f);
+        const float flangeTap=flangeGain!=0.f ? flange.read((flangeTime+flangeDepth*flangeMod)*Fs) : 0.f;
         flange.push(dry);
         const Stereo reverberation=verb.process(bounded(dry+delayed,-8.f,8.f));
         l=clean(dry+output.left+flangeTap*flangeGain+reverberation.left*reverbGain);
         r=clean(dry+output.right+flangeTap*flangeGain+reverberation.right*reverbGain);
-        l=bounded(l,-32.f,32.f);r=bounded(r,-32.f,32.f);
+        l=limited(l,-32.f,32.f);r=limited(r,-32.f,32.f);
     }
 };
 

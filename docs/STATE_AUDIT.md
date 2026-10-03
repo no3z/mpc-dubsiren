@@ -1,5 +1,8 @@
 # 1.0.1 state audit
 
+Historical 1.0.1 record. Current 1.0.2 results and compatibility limits are in
+[PERFORMANCE_1.0.2.md](PERFORMANCE_1.0.2.md).
+
 The actual VST entry advertises `effFlagsProgramChunks`, version 1001. Its
 `effGetChunk`/`effSetChunk` calls reach the engine's `serialize`/`restore` functions.
 Each instance has an 8192-byte chunk buffer; payload is `DFS1 ` followed by all

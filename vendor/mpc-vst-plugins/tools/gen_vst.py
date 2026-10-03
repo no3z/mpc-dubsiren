@@ -25,6 +25,7 @@ A layout's popups add one hidden "<key>__open" param each, after the list.
 Keep uid and so fixed across releases, and never reorder the list (saved projects store values by index).
 """
 import json
+import math
 import os
 import shlex
 import sys
@@ -77,9 +78,10 @@ def gen_params(cfg, params, out):
              "#pragma once",
              "typedef struct { const char *key, *name, *unit; float min, max, def; int nopts; "
              "const char *const *opts; int momentary; int string_display; int int_display; "
-             "int step_target; float step_delta; int popup_of; int hold_ms; int dynamic_name; int dynamic_display; } param_t;"]
+             "int step_target; float step_delta; int popup_of; int hold_ms; int dynamic_name; int dynamic_display; float physical_default; int logarithmic; float log_min, log_span; const int *enum_values; } param_t;"]
     key_to_index = {p["key"]: i for i, p in enumerate(params)}
     rows = []
+    defaults = []
     for i, p in enumerate(params):
         opts = p.get("options") or []
         name = c_str(short(p.get("name", p["key"]), sn))
@@ -109,6 +111,11 @@ def gen_params(cfg, params, out):
         # "dynamic_display" -- likewise for the value text (effGetParamDisplay): get_param("<key>_display")
         # first. The value itself stays numeric, so knobs, Q-Links and automation work as usual.
         dyn_disp = int(bool(p.get("dynamic_display")))
+        values = p.get("values")
+        if values is not None:
+            if not opts or sorted(values) != list(range(len(opts))):
+                raise ValueError("enum values must be a permutation of engine indices")
+            lines.append("static const int VALUES_%d[] = {%s};" % (i, ", ".join(map(str, values))))
         if opts:
             lines.append("static const char *const OPTS_%d[] = {%s};" % (i, ", ".join(c_str(o) for o in opts)))
             d = p.get("default", 0)
@@ -121,10 +128,20 @@ def gen_params(cfg, params, out):
         else:
             lo, hi = p.get("min", 0), p.get("max", 1)
             d = p.get("default", lo)
-            norm = (d - lo) / (hi - lo) if hi > lo else 0
+            norm = (math.log(d / lo) / math.log(hi / lo) if p.get("scale") == "log"
+                    else (d - lo) / (hi - lo) if hi > lo else 0)
             rows.append("    {%s, %s, %s, %s, %s, %s, 0, 0, %d, %d, %d, %d, %s, %d, %d, %d, %d}," % (
                 c_str(p["key"]), name, c_str(p.get("unit", "")), fl(lo), fl(hi), fl(norm),
                 bool(p.get("momentary")), is_str, is_int, step_target, fl(step_delta), popup_of, p.get("hold_ms", 0), dyn, dyn_disp))
+        physical_default = values[d] if values is not None else d
+        defaults.append(fl(physical_default))
+        logarithmic = p.get("scale") == "log"
+        log_min = math.log(lo) if logarithmic else 0
+        log_span = math.log(hi / lo) if logarithmic else 0
+        rows[-1] = rows[-1][:-2] + ", %s, %d, %s, %s, %s}," % (
+            fl(physical_default), logarithmic, fl(log_min), fl(log_span),
+            "VALUES_%d" % i if values is not None else "0")
+    lines += ["static const float PHYSICAL_DEFAULTS[] = {%s};" % ", ".join(defaults)]
     lines += ["static const param_t PARAMS[] = {"] + rows + ["};", "#define NPARAMS %d" % len(params),
               "#define PLUG_NAME %s" % c_str(cfg["name"]), "#define PLUG_VENDOR %s" % c_str(cfg["vendor"]),
               "#define PLUG_UID 0x%08x /* '%s' */" % (int.from_bytes(cfg["uid"].encode(), "big"), cfg["uid"]),

@@ -1,0 +1,27 @@
+plugin /media/AKAI_SSD/Synths/Dub Force - VST - Dub Force Siren/dub_force_siren.so: instrument, 57 params, open 0.9 ms; block 128 @ 44100 Hz = 2902 us budget
+stage               mean%     p95%     p99%     max%  threads%    peak
+idle                  3.0      3.2      3.5      5.1       0.0    0.00
+1 voices              5.3      5.6      5.6      6.3       0.0    0.43
+4 voices              5.3      5.6      5.6      5.8       0.0    0.13
+all-param sweep       5.9      7.7      7.8      9.2       0.0    0.17
+release tail          5.6      6.1      6.2      6.4       0.0    0.00
+basic dry             6.0      7.3      7.6      7.6      -0.0    0.12
+filter sweep          6.0      6.3      6.5      7.1      -0.0    0.41
+heavy echo            5.5      6.5      6.8      7.4       0.0    0.45
+freeze                6.4      6.9      7.3      8.1      -0.0    0.20
+reverb full           5.8      6.4      6.7      6.7      -0.0    0.26
+all modulation        6.2      6.4      6.6      6.7      -0.0    0.36
+preset 00             5.6      6.7      7.0      7.1       0.0    0.29
+preset 01             5.3      5.5      5.8      6.0       0.0    0.35
+preset 02             5.9      6.3      6.6      6.6      -0.0    0.28
+preset 03             5.5      6.1      6.4      6.5       0.0    0.40
+preset 04             5.9      6.2      6.4      6.5       0.0    0.37
+preset 05             5.9      6.7      7.0      7.1      -0.0    0.27
+preset 06             6.3      7.2      7.9      8.5      -0.0    0.32
+preset 07             6.2      7.3      7.8      8.6       0.0    0.41
+preset 08             5.6      6.7      7.2      8.2      -0.0    0.43
+preset 09             6.3      6.8      7.2      7.3       0.0    0.33
+preset 10             5.7      6.9      7.2      7.4       0.0    0.29
+preset 11             6.0      6.5      6.8      7.1       0.0    0.19
+worst p99 7.9%, worst block 9.2%, background threads up to 0.0% of a core -> PASS
+{"plugin":"/media/AKAI_SSD/Synths/Dub Force - VST - Dub Force Siren/dub_force_siren.so","instrument":1,"open_ms":0.9,"p99_pct":7.9,"max_pct":9.2,"threads_pct":0.0,"verdict":"PASS"}

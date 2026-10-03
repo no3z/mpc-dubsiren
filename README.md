@@ -1,7 +1,8 @@
 # Dub Force Siren
 
-Download the [1.0.1 release candidate ZIP](dist/Dub-Force-Siren-1.0.1-mpc-armv7.zip).
-The [1.0.0 ZIP](dist/Dub-Force-Siren-1.0.0-mpc-armv7.zip) is retained for rollback.
+Download the [1.0.2 ZIP](dist/Dub-Force-Siren-1.0.2-mpc-armv7.zip).
+The [1.0.1 ZIP](dist/Dub-Force-Siren-1.0.1-mpc-armv7.zip) and
+[1.0.0 ZIP](dist/Dub-Force-Siren-1.0.0-mpc-armv7.zip) are retained for rollback.
 See [installation instructions](docs/INSTALL_FORCE.md) before installing.
 
 Native ARM VST2 dub siren for Akai Force/MPC OS. The engine ports BARZINE Siren
@@ -40,7 +41,7 @@ DUB_ARM_IMAGE=dub-force-arm ./tools/build.sh arm
 ```
 
 Hardware artifact: `build/arm/dub_force_siren.so`. Installer package:
-`dist/Dub-Force-Siren-1.0.1-mpc-armv7.zip`. Standalone demonstrations are generated
+`dist/Dub-Force-Siren-1.0.2-mpc-armv7.zip`. Standalone demonstrations are generated
 by `tools/render_demo.cpp`; presets by `tools/export_presets.cpp`. The included
 factory preset selector works without loading external files.
 
@@ -56,9 +57,16 @@ See [build results](docs/BUILD.md), [DSP/reference limits](docs/DSP.md),
 [parameter contract](docs/PARAMETERS.md), [installation](docs/INSTALL_FORCE.md),
 [device evidence and manual checklist](docs/DEVICE_TEST.md), and [TODO](TODO.md).
 
-Version 1.0.1 is installed on the Force. CPU p99 fell from 19.6% to 11.0% in
-the installed stress benchmark; [performance evidence](docs/PERFORMANCE.md) and
-[three UI iterations](docs/UI_REDESIGN.md) document the changes and limits.
+Version 1.0.2 adds logarithmic Pitch down to 10 Hz, primary Wave Q-Link and a
+secondary selector for the twelve integrated presets. Primary order: Pitch,
+Wave, LFO Rate, LFO Depth, Zap, Cutoff, Delay Time, Feedback. Secondary: Resonance,
+Preset, Attack, Release, Echo Mix, Ping, Reverb, Output. Wave and Preset show names.
+
+Physical project chunks retain their old Pitch and Wave values. Older normalized
+automation for these two parameters changes meaning with the new mapping.
+See [the 1.0.2 CPU, compatibility and device report](docs/PERFORMANCE_1.0.2.md).
+The [earlier performance report](docs/PERFORMANCE.md) and
+[three UI iterations](docs/UI_REDESIGN.md) preserve the 1.0.1 history.
 
 Release hardening is recorded in [the RC audit](docs/RELEASE_CANDIDATE.md).
 Complete the [numbered 10–15 minute Force test card](docs/MANUAL_FORCE_TEST_CARD.md)

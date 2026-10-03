@@ -8,9 +8,9 @@ correct group size. There are no duplicate local definition keys or duplicate
 active IDs inside a Q-Link bank. Hidden popup ID 51 is transient; IDs 52–56 remain
 compatibility flags, with no sound role.
 
-Main Q-Link order is slots 13, 9, 5, 1, 14, 10, 6, 2: Pitch, Rate, Depth, Zap Sweep,
-Cutoff, Resonance, Delay Time, Feedback. Slots 15, 11, 7, 3, 16, 12, 8, 4 form the second
-set: Attack, Release, LFO2 amount, LFO3 amount, Echo Mix, Ping, Reverb, Output.
+Main Q-Link order is slots 13, 9, 5, 1, 14, 10, 6, 2: Pitch, Wave, LFO Rate,
+LFO Depth, Zap Sweep, Cutoff, Delay Time, Feedback. Slots 15, 11, 7, 3, 16, 12, 8, 4 form the second
+set: Resonance, Preset, Attack, Release, Echo Mix, Ping, Reverb, Output.
 These are native 16-slot addresses, not a claim that Force has 16 physical knobs.
 The Force selects subsets/banks; exact hardware selection must be tested.
 Utility maps six EQ bands and Fast/Slow/octave up/down. Unused slots are -1.
@@ -23,22 +23,22 @@ LO CUT/HI CUT mean feedback highpass/lowpass. Primary ranges/defaults are below.
 
 | Page / visible control | ID / key | DSP destination | Physical range | Default | Native display | Q-Link address |
 | --- | --- | --- | --- | --- | --- | --- |
-| SIREN / PITCH | 5 / pitch | c[P_pitch] → basePitch / zapStart | 60…2400 Hz | 620 Hz | 0 decimals | Main Q-Link 13 |
-| SIREN / ATTACK | 11 / attack | attackCoeff / ZAP decay | 0.005…1 s | 0.01 s | 3 decimals | Main Q-Link 15 |
-| SIREN / RELEASE | 12 / release | releaseCoeff → env | 0.02…3 s | 0.05 s | 3 decimals | Main Q-Link 11 |
+| SIREN / PITCH | 5 / pitch | c[P_pitch] → basePitch / zapStart | 10…2400 Hz | 620 Hz | 1 decimal below 100 Hz; whole Hz above | Main Q-Link 13 |
+| SIREN / ATTACK | 11 / attack | attackCoeff / ZAP decay | 0.005…1 s | 0.01 s | 3 decimals | Main Q-Link 7 |
+| SIREN / RELEASE | 12 / release | releaseCoeff → env | 0.02…3 s | 0.05 s | 3 decimals | Main Q-Link 3 |
 | SIREN / LEVEL | 6 / level | c[P_level] → effect-output gain | 0…100 % | 70 % | 0 decimals | touch only |
 | SIREN / NOISE | 7 / noise | noiseGain → oscillator white-noise mix | 0…100 % | 0 % | 0 decimals | touch only |
-| SIREN / LFO RATE | 9 / rate | mainRate → s.lfo phase | 0.05…24 Hz | 0.55 Hz | 2 decimals | Main Q-Link 9 |
-| SIREN / LFO DEPTH | 10 / depth | mainDepth → frequency FM | 0…1400 Hz | 480 Hz | 0 decimals | Main Q-Link 5 |
+| SIREN / LFO RATE | 9 / rate | mainRate → s.lfo phase | 0.05…24 Hz | 0.55 Hz | 2 decimals | Main Q-Link 5 |
+| SIREN / LFO DEPTH | 10 / depth | mainDepth → frequency FM | 0…1400 Hz | 480 Hz | 0 decimals | Main Q-Link 1 |
 | SIREN / LFO2 RATE | 13 / lfo2_rate | s.lfo2 phase | 0.03…8 Hz | 0.17 Hz | 2 decimals | touch only |
-| SIREN / RATE MOD | 14 / lfo2_amount | mainRate nested modulation | 0…100 % | 0 % | 0 decimals | Main Q-Link 7 |
+| SIREN / RATE MOD | 14 / lfo2_amount | mainRate nested modulation | 0…100 % | 0 % | 0 decimals | touch only |
 | SIREN / LFO3 RATE | 15 / lfo3_rate | s.lfo3 phase | 0.03…8 Hz | 0.11 Hz | 2 decimals | touch only |
-| SIREN / DEPTH MOD | 16 / lfo3_amount | mainDepth nested modulation | 0…100 % | 0 % | 0 decimals | Main Q-Link 3 |
-| SIREN / SWEEP | 19 / zap_sweep | zapEnd / zapMultiplier | -48…48 st | -24 st | 0 decimals | Main Q-Link 1 |
+| SIREN / DEPTH MOD | 16 / lfo3_amount | mainDepth nested modulation | 0…100 % | 0 % | 0 decimals | touch only |
+| SIREN / SWEEP | 19 / zap_sweep | zapEnd / zapMultiplier | -48…48 st | -24 st | 0 decimals | Main Q-Link 14 |
 | SIREN / TIME | 20 / zap_time | zapLength / zapDecay | 0.04…1.2 s | 0.18 s | 3 decimals | touch only |
 | SIREN / REPEAT | 21 / repeat | repeatClock / startZap | 0…16 Hz | 0 Hz | 2 decimals | touch only |
-| SIREN / CUTOFF | 23 / cutoff | tone coefficients / FILTER FX cutoff | 200…9000 Hz | 4000 Hz | 0 decimals | Main Q-Link 14 |
-| SIREN / RESO | 24 / resonance | tone coefficients / FILTER FX Q | 0…20 dB | 2 dB | 1 decimal | Main Q-Link 10 |
+| SIREN / CUTOFF | 23 / cutoff | tone coefficients / FILTER FX cutoff | 200…9000 Hz | 4000 Hz | 0 decimals | Main Q-Link 10 |
+| SIREN / RESO | 24 / resonance | tone coefficients / FILTER FX Q | 0…20 dB | 2 dB | 1 decimal | Main Q-Link 15 |
 | SIREN / CHOP | 17 / chop_rate | s.chop phase | 0.25…32 Hz | 4 Hz | 2 decimals | touch only |
 | SIREN / DEPTH | 18 / chop_amount | chopGain / chopSmoothed | 0…100 % | 0 % | 0 decimals | touch only |
 | SIREN / DELAY | 25 / delay_time | EchoConfig.time → Effects.time | 0.05…3 s | 0.416667 s | 3 decimals | Main Q-Link 6 |
@@ -49,11 +49,11 @@ LO CUT/HI CUT mean feedback highpass/lowpass. Primary ranges/defaults are below.
 | SIREN / PING PONG | 30 / ping | EchoConfig.ping → stereo pan depth | 0…100 % | 0 % | 0 decimals | Main Q-Link 12 |
 | SIREN / REVERB | 32 / reverb | EchoConfig.reverb → reverbGain | 0…100 % | 16 % | 0 decimals | Main Q-Link 8 |
 | SIREN / OUTPUT | 33 / output | c[P_output] → final output gain | 0…100 % | 100 % | 0 decimals | Main Q-Link 4 |
-| SIREN / SQUARE | 4 / wave | c[P_wave] → waveBlend / wave() | SQUARE / SAW / TRIANGLE / SINE / NOISE | SQUARE | option text | touch only |
-| SIREN / SAW | 4 / wave | c[P_wave] → waveBlend / wave() | SQUARE / SAW / TRIANGLE / SINE / NOISE | SQUARE | option text | touch only |
-| SIREN / TRI | 4 / wave | c[P_wave] → waveBlend / wave() | SQUARE / SAW / TRIANGLE / SINE / NOISE | SQUARE | option text | touch only |
-| SIREN / SINE | 4 / wave | c[P_wave] → waveBlend / wave() | SQUARE / SAW / TRIANGLE / SINE / NOISE | SQUARE | option text | touch only |
-| SIREN / NOISE | 4 / wave | c[P_wave] → waveBlend / wave() | SQUARE / SAW / TRIANGLE / SINE / NOISE | SQUARE | option text | touch only |
+| SIREN / SINE | 4 / wave | c[P_wave] → waveBlend / wave() | SINE / TRIANGLE / SAW / SQUARE / NOISE | SQUARE | option text | Main Q-Link 9 |
+| SIREN / TRI | 4 / wave | c[P_wave] → waveBlend / wave() | SINE / TRIANGLE / SAW / SQUARE / NOISE | SQUARE | option text | Main Q-Link 9 |
+| SIREN / SAW | 4 / wave | c[P_wave] → waveBlend / wave() | SINE / TRIANGLE / SAW / SQUARE / NOISE | SQUARE | option text | Main Q-Link 9 |
+| SIREN / SQUARE | 4 / wave | c[P_wave] → waveBlend / wave() | SINE / TRIANGLE / SAW / SQUARE / NOISE | SQUARE | option text | Main Q-Link 9 |
+| SIREN / NOISE | 4 / wave | c[P_wave] → waveBlend / wave() | SINE / TRIANGLE / SAW / SQUARE / NOISE | SQUARE | option text | Main Q-Link 9 |
 | SIREN / SIREN | 3 / mode | c[P_mode] → siren/ZAP gate and frequency | SIREN / ZAP | SIREN | option text | touch only |
 | SIREN / ZAP | 3 / mode | c[P_mode] → siren/ZAP gate and frequency | SIREN / ZAP | SIREN | option text | touch only |
 | SIREN / TRI | 8 / lfo_wave | lfoWave(s.lfo, c[P_lfo_wave]) | TRIANGLE / SQUARE / SAW / SINE | TRIANGLE | option text | touch only |
@@ -78,18 +78,18 @@ LO CUT/HI CUT mean feedback highpass/lowpass. Primary ranges/defaults are below.
 | SIREN / KILL | 42 / kill | killGain → output mute slew | OFF / ON | OFF | option text | touch only |
 | SIREN / STOP | 44 / stop | stopTriggers → reset / clear holds and notes | 0…1  | 0  | 1 decimal | touch only |
 | SIREN / PATCH | 51 / preset__open | UI popup, transient | Closed / Open | Closed | preset name | none |
-| SIREN / AIR RAID (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / LASER (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / FOG HORN (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / POLICE (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / UFO (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / SPACE ECHO (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / SMOKE (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / CLASH (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / HEAVY DUB (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / DEEP ORBIT (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / FEEDBACK MADNESS (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
-| SIREN / SCI-FI ALARM (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | touch only |
+| SIREN / AIR RAID (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / LASER (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / FOG HORN (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / POLICE (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / UFO (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / SPACE ECHO (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / SMOKE (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / CLASH (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / HEAVY DUB (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / DEEP ORBIT (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / FEEDBACK MADNESS (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
+| SIREN / SCI-FI ALARM (PATCH overlay) | 2 / preset | Impl::preset full parameter snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid | option text | Main Q-Link 11 |
 | UTILITY / OSC LOW | 45 / osc_low | oscEq[0] coefficients/process | -24…12 dB | 0 dB | 0 decimals | Utility Q-Link 13 |
 | UTILITY / OSC MID | 46 / osc_mid | oscEq[1] coefficients/process | -24…12 dB | 0 dB | 0 decimals | Utility Q-Link 9 |
 | UTILITY / OSC HIGH | 47 / osc_high | oscEq[2] coefficients/process | -24…12 dB | 0 dB | 0 decimals | Utility Q-Link 5 |

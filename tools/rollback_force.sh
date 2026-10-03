@@ -1,9 +1,15 @@
 #!/bin/sh
 # Run on Force: --check is read-only; --apply rolls back this plugin only.
-# Copy this file, plugin_list.awk and rollback-1.0.0.sha256 into the same /tmp folder.
+# Copy this file, plugin_list.awk and the selected rollback manifest together.
 set -eu
 MODE=${1:---check}
-case "$MODE" in --check|--apply) ;; *) echo 'Usage: rollback_force.sh [--check|--apply]' >&2; exit 2;; esac
+case "$MODE" in --check|--apply) ;; *) echo 'Usage: rollback_force.sh [--check|--apply] [1.0.0|1.0.1]' >&2; exit 2;; esac
+VERSION=${2:-1.0.0}
+case "$VERSION" in
+    1.0.0) BACKUP_NAME=1.0.0-before-1.0.1 ;;
+    1.0.1) BACKUP_NAME=1.0.1-before-1.0.2 ;;
+    *) echo 'Supported rollback versions: 1.0.0, 1.0.1' >&2; exit 2 ;;
+esac
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 # Test harness prefix isolates every device path and disables service control.
 PREFIX=${DUB_FORCE_ROLLBACK_TEST_ROOT:-}
@@ -13,17 +19,17 @@ fi
 LIBRARY="$PREFIX/media/AKAI_SSD/Synths"
 NAME='Dub Force - VST - Dub Force Siren'
 TARGET="$LIBRARY/$NAME"
-BACKUP="$PREFIX/media/AKAI_SSD/Dub-Force-Siren-backups/1.0.0-before-1.0.1"
+BACKUP="$PREFIX/media/AKAI_SSD/Dub-Force-Siren-backups/$BACKUP_NAME"
 SETTINGS="$PREFIX/media/az01-internal/Settings/MPC/MPC.settings"
 AWKFILE="$HERE/plugin_list.awk"
-MANIFEST="$HERE/rollback-1.0.0.sha256"
+MANIFEST="$HERE/rollback-$VERSION.sha256"
 [ -f "$AWKFILE" ] || AWKFILE="$HERE/../vendor/mpc-vst-plugins/tools/release/plugin_list.awk"
-[ -f "$MANIFEST" ] || MANIFEST="$HERE/../resources/rollback-1.0.0.sha256"
+[ -f "$MANIFEST" ] || MANIFEST="$HERE/../resources/rollback-$VERSION.sha256"
 [ -f "$AWKFILE" ] && [ -f "$MANIFEST" ] && [ -f "$SETTINGS" ] || { echo 'Missing rollback companion/settings file' >&2; exit 1; }
 [ -d "$BACKUP" ] && [ ! -L "$BACKUP" ] && [ -d "$TARGET" ] && [ ! -L "$TARGET" ] || { echo 'Backup/current plugin folder missing or symbolic' >&2; exit 1; }
 (cd "$BACKUP" && sha256sum -c "$MANIFEST" >/dev/null)
 grep -q 'uid="44625372"' "$BACKUP/plugin-meta.xml"
-grep -q '<version>1.0.0.0</version>' "$BACKUP/version.xml"
+grep -Fq "<version>$VERSION.0</version>" "$BACKUP/version.xml"
 if [ -z "$PREFIX" ]; then
     [ "$(id -u)" = 0 ] || { echo 'Run as root on Force' >&2; exit 1; }
     case "$(uname -m)" in armv7*) ;; *) echo 'Expected ARMv7 Force' >&2; exit 1;; esac
@@ -39,7 +45,9 @@ make_settings() {
 import sys, xml.etree.ElementTree as E
 before,after=[E.parse(p).getroot() for p in sys.argv[1:]]
 def entries(root):return list(root.iter('PLUGIN'))
-def other(root):return sorted(E.tostring(p) for p in entries(root) if p.get('uid')!='44625372')
+# ElementTree includes each entry's following indentation in tostring(). The
+# installer can change that separator while preserving the entry itself.
+def other(root):return sorted(E.tostring(p).strip() for p in entries(root) if p.get('uid')!='44625372')
 assert other(before)==other(after),'Unrelated plugin registrations changed'
 def fingerprint(e):
  if e.tag=='PLUGIN' and e.get('uid')=='44625372':return None
@@ -50,7 +58,7 @@ assert len(target)==1 and target[0].get('name')=='Dub Force Siren','Target regis
 PY
 }
 make_settings
-printf 'PASS: complete 1.0.0 backup verified; target-only registration edit verified.\n'
+printf 'PASS: complete %s backup verified; target-only registration edit verified.\n' "$VERSION"
 if [ "$MODE" = --check ]; then echo 'No plugin/settings/service changes made.'; exit 0; fi
 # Stop only after all verification. Save current project before --apply.
 ctl() { if [ -z "$PREFIX" ]; then systemctl "$1" acvs; fi; }
@@ -80,4 +88,4 @@ mv "$WORK/settings-permissions.xml" "$SETTINGS"
 sync
 ctl start
 RESTART=0
-printf 'Restored 1.0.0. Previous current plugin/settings retained at %s\n' "$RECOVERY"
+printf 'Restored %s. Previous current plugin/settings retained at %s\n' "$VERSION" "$RECOVERY"

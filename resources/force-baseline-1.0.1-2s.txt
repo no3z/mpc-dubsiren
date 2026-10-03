@@ -1,0 +1,9 @@
+plugin /media/AKAI_SSD/Synths/Dub Force - VST - Dub Force Siren/dub_force_siren.so: instrument, 57 params, open 2.7 ms; block 128 @ 44100 Hz = 2902 us budget
+stage               mean%     p95%     p99%     max%  threads%    peak
+idle                  8.7      9.5      9.9     10.9       0.0    0.00
+1 voices              9.5     10.3     10.6     11.5       0.0    0.43
+4 voices              9.5     10.2     10.6     11.0       0.0    0.13
+all-param sweep      10.1     11.0     11.6     12.1       0.0    0.17
+release tail          9.1      9.9     10.5     11.0       0.0    0.00
+worst p99 11.6%, worst block 12.1%, background threads up to 0.0% of a core -> PASS
+{"plugin":"/media/AKAI_SSD/Synths/Dub Force - VST - Dub Force Siren/dub_force_siren.so","instrument":1,"open_ms":2.7,"p99_pct":11.6,"max_pct":12.1,"threads_pct":0.0,"verdict":"PASS"}

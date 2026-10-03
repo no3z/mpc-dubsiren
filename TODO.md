@@ -26,3 +26,10 @@
 [x] Verify real rollback backup and plugin-only rollback in an isolated fixture.
 [x] Prepare numbered 10–15 minute physical Force test card.
 [ ] Complete docs/MANUAL_FORCE_TEST_CARD.md on the actual Force.
+
+[x] 1.0.2 deeper profiling/CPU optimization; installed storm p99 8.3%.
+[ ] Hold <=8% storm p99 consistently in the ten-second follow-up (short run is 7.8%).
+[x] Logarithmic 10–2400 Hz Pitch; base/ZAP floor audit and low-frequency extremes.
+[x] Primary discrete named Wave Q-Link and secondary native factory Preset selector.
+[x] Actual 1.0.1 chunk fixtures, rapid preset/wave safety and allocation tests.
+[x] ARM/ZIP reproduced independently; 1.0.1 backup/rollback fixture and 1.0.2 installed verification.

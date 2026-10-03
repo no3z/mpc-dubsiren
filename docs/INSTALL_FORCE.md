@@ -13,9 +13,9 @@ application service, which is required to register a new plugin. Firmware,
 boot files, network settings and other plugins are not changed.
 
 ```sh
-python3 -m zipfile -e dist/Dub-Force-Siren-1.0.1-mpc-armv7.zip build/install
-scp -r build/install/Dub-Force-Siren-1.0.1 root@192.168.2.31:/tmp/
-ssh root@192.168.2.31 sh /tmp/Dub-Force-Siren-1.0.1/install.sh -y -t /media/AKAI_SSD/Synths
+python3 -m zipfile -e dist/Dub-Force-Siren-1.0.2-mpc-armv7.zip build/install
+scp -r build/install/Dub-Force-Siren-1.0.2 root@192.168.2.31:/tmp/
+ssh root@192.168.2.31 sh /tmp/Dub-Force-Siren-1.0.2/install.sh -y -t /media/AKAI_SSD/Synths
 ```
 
 The checksummed upstream installer validates root/armv7/settings, selects the
@@ -49,3 +49,9 @@ The matching pre-update settings copy is
 `/media/AKAI_SSD/Dub-Force-Siren-backups/MPC.settings-before-1.0.1`.
 The installer also saved
 `MPC.settings.bak-dub_force_siren-20261003-012001` beside the live settings file.
+
+The complete 1.0.1 backup for this update is at
+`/media/AKAI_SSD/Dub-Force-Siren-backups/1.0.1-before-1.0.2/`, with all 116
+original file hashes in `resources/rollback-1.0.1.sha256`. Its separate settings
+copy is `MPC.settings-before-1.0.2` in the backups parent. Restore only this plugin
+with `rollback_force.sh --apply 1.0.1`; check it first with `--check 1.0.1`.

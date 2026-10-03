@@ -442,7 +442,7 @@
     "type": "Knob"
   },
   {
-    "control": "SQUARE",
+    "control": "SINE",
     "param": "wave",
     "parent": [
       28,
@@ -452,23 +452,6 @@
     ],
     "widget": [
       28,
-      198,
-      65,
-      40
-    ],
-    "type": "Button"
-  },
-  {
-    "control": "SAW",
-    "param": "wave",
-    "parent": [
-      99,
-      198,
-      65,
-      40
-    ],
-    "widget": [
-      99,
       198,
       65,
       40
@@ -479,6 +462,23 @@
     "control": "TRI",
     "param": "wave",
     "parent": [
+      99,
+      198,
+      65,
+      40
+    ],
+    "widget": [
+      99,
+      198,
+      65,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "SAW",
+    "param": "wave",
+    "parent": [
       170,
       198,
       65,
@@ -493,7 +493,7 @@
     "type": "Button"
   },
   {
-    "control": "SINE",
+    "control": "SQUARE",
     "param": "wave",
     "parent": [
       28,

@@ -1,0 +1,2 @@
+# Captured DFS1 chunks retain the original trailing separator.
+tests/fixtures/legacy-1.0.1.chunks whitespace=-blank-at-eol

@@ -1,0 +1,714 @@
+{
+  "baseline_2s": {
+    "idle": {
+      "mean": 8.7,
+      "p95": 9.5,
+      "p99": 9.9,
+      "max": 10.9,
+      "threads": 0.0,
+      "peak": 0.0
+    },
+    "1 voices": {
+      "mean": 9.5,
+      "p95": 10.3,
+      "p99": 10.6,
+      "max": 11.5,
+      "threads": 0.0,
+      "peak": 0.43
+    },
+    "4 voices": {
+      "mean": 9.5,
+      "p95": 10.2,
+      "p99": 10.6,
+      "max": 11.0,
+      "threads": 0.0,
+      "peak": 0.13
+    },
+    "all-param sweep": {
+      "mean": 10.1,
+      "p95": 11.0,
+      "p99": 11.6,
+      "max": 12.1,
+      "threads": 0.0,
+      "peak": 0.17
+    },
+    "release tail": {
+      "mean": 9.1,
+      "p95": 9.9,
+      "p99": 10.5,
+      "max": 11.0,
+      "threads": 0.0,
+      "peak": 0.0
+    }
+  },
+  "installed_2s": {
+    "idle": {
+      "mean": 3.0,
+      "p95": 3.2,
+      "p99": 3.5,
+      "max": 5.1,
+      "threads": 0.0,
+      "peak": 0.0
+    },
+    "1 voices": {
+      "mean": 5.3,
+      "p95": 5.6,
+      "p99": 5.6,
+      "max": 6.3,
+      "threads": 0.0,
+      "peak": 0.43
+    },
+    "4 voices": {
+      "mean": 5.3,
+      "p95": 5.6,
+      "p99": 5.6,
+      "max": 5.8,
+      "threads": 0.0,
+      "peak": 0.13
+    },
+    "all-param sweep": {
+      "mean": 5.9,
+      "p95": 7.7,
+      "p99": 7.8,
+      "max": 9.2,
+      "threads": 0.0,
+      "peak": 0.17
+    },
+    "release tail": {
+      "mean": 5.6,
+      "p95": 6.1,
+      "p99": 6.2,
+      "max": 6.4,
+      "threads": 0.0,
+      "peak": 0.0
+    },
+    "basic dry": {
+      "mean": 6.0,
+      "p95": 7.3,
+      "p99": 7.6,
+      "max": 7.6,
+      "threads": -0.0,
+      "peak": 0.12
+    },
+    "filter sweep": {
+      "mean": 6.0,
+      "p95": 6.3,
+      "p99": 6.5,
+      "max": 7.1,
+      "threads": -0.0,
+      "peak": 0.41
+    },
+    "heavy echo": {
+      "mean": 5.5,
+      "p95": 6.5,
+      "p99": 6.8,
+      "max": 7.4,
+      "threads": 0.0,
+      "peak": 0.45
+    },
+    "freeze": {
+      "mean": 6.4,
+      "p95": 6.9,
+      "p99": 7.3,
+      "max": 8.1,
+      "threads": -0.0,
+      "peak": 0.2
+    },
+    "reverb full": {
+      "mean": 5.8,
+      "p95": 6.4,
+      "p99": 6.7,
+      "max": 6.7,
+      "threads": -0.0,
+      "peak": 0.26
+    },
+    "all modulation": {
+      "mean": 6.2,
+      "p95": 6.4,
+      "p99": 6.6,
+      "max": 6.7,
+      "threads": -0.0,
+      "peak": 0.36
+    },
+    "preset 00": {
+      "mean": 5.6,
+      "p95": 6.7,
+      "p99": 7.0,
+      "max": 7.1,
+      "threads": 0.0,
+      "peak": 0.29
+    },
+    "preset 01": {
+      "mean": 5.3,
+      "p95": 5.5,
+      "p99": 5.8,
+      "max": 6.0,
+      "threads": 0.0,
+      "peak": 0.35
+    },
+    "preset 02": {
+      "mean": 5.9,
+      "p95": 6.3,
+      "p99": 6.6,
+      "max": 6.6,
+      "threads": -0.0,
+      "peak": 0.28
+    },
+    "preset 03": {
+      "mean": 5.5,
+      "p95": 6.1,
+      "p99": 6.4,
+      "max": 6.5,
+      "threads": 0.0,
+      "peak": 0.4
+    },
+    "preset 04": {
+      "mean": 5.9,
+      "p95": 6.2,
+      "p99": 6.4,
+      "max": 6.5,
+      "threads": 0.0,
+      "peak": 0.37
+    },
+    "preset 05": {
+      "mean": 5.9,
+      "p95": 6.7,
+      "p99": 7.0,
+      "max": 7.1,
+      "threads": -0.0,
+      "peak": 0.27
+    },
+    "preset 06": {
+      "mean": 6.3,
+      "p95": 7.2,
+      "p99": 7.9,
+      "max": 8.5,
+      "threads": -0.0,
+      "peak": 0.32
+    },
+    "preset 07": {
+      "mean": 6.2,
+      "p95": 7.3,
+      "p99": 7.8,
+      "max": 8.6,
+      "threads": 0.0,
+      "peak": 0.41
+    },
+    "preset 08": {
+      "mean": 5.6,
+      "p95": 6.7,
+      "p99": 7.2,
+      "max": 8.2,
+      "threads": -0.0,
+      "peak": 0.43
+    },
+    "preset 09": {
+      "mean": 6.3,
+      "p95": 6.8,
+      "p99": 7.2,
+      "max": 7.3,
+      "threads": 0.0,
+      "peak": 0.33
+    },
+    "preset 10": {
+      "mean": 5.7,
+      "p95": 6.9,
+      "p99": 7.2,
+      "max": 7.4,
+      "threads": 0.0,
+      "peak": 0.29
+    },
+    "preset 11": {
+      "mean": 6.0,
+      "p95": 6.5,
+      "p99": 6.8,
+      "max": 7.1,
+      "threads": 0.0,
+      "peak": 0.19
+    }
+  },
+  "baseline_10s": {
+    "idle": {
+      "mean": 8.7,
+      "p95": 9.4,
+      "p99": 9.7,
+      "max": 10.9,
+      "threads": 0.0,
+      "peak": 0.0
+    },
+    "1 voices": {
+      "mean": 9.6,
+      "p95": 10.3,
+      "p99": 10.7,
+      "max": 11.4,
+      "threads": 0.0,
+      "peak": 0.43
+    },
+    "4 voices": {
+      "mean": 9.6,
+      "p95": 10.3,
+      "p99": 10.7,
+      "max": 11.3,
+      "threads": 0.0,
+      "peak": 0.13
+    },
+    "all-param sweep": {
+      "mean": 10.1,
+      "p95": 11.0,
+      "p99": 11.5,
+      "max": 12.5,
+      "threads": 0.0,
+      "peak": 0.0
+    },
+    "release tail": {
+      "mean": 8.9,
+      "p95": 9.7,
+      "p99": 10.2,
+      "max": 11.3,
+      "threads": 0.0,
+      "peak": 0.0
+    },
+    "basic dry": {
+      "mean": 9.5,
+      "p95": 10.3,
+      "p99": 10.7,
+      "max": 11.9,
+      "threads": 0.0,
+      "peak": 0.11
+    },
+    "filter sweep": {
+      "mean": 10.4,
+      "p95": 11.2,
+      "p99": 11.7,
+      "max": 12.1,
+      "threads": 0.0,
+      "peak": 0.4
+    },
+    "heavy echo": {
+      "mean": 9.6,
+      "p95": 10.4,
+      "p99": 10.9,
+      "max": 11.9,
+      "threads": 0.0,
+      "peak": 0.36
+    },
+    "freeze": {
+      "mean": 10.0,
+      "p95": 10.8,
+      "p99": 11.2,
+      "max": 11.9,
+      "threads": 0.0,
+      "peak": 0.2
+    },
+    "reverb full": {
+      "mean": 9.6,
+      "p95": 10.3,
+      "p99": 10.7,
+      "max": 12.0,
+      "threads": 0.0,
+      "peak": 0.26
+    },
+    "all modulation": {
+      "mean": 9.9,
+      "p95": 10.6,
+      "p99": 11.0,
+      "max": 11.8,
+      "threads": 0.0,
+      "peak": 0.36
+    },
+    "preset 00": {
+      "mean": 9.5,
+      "p95": 10.3,
+      "p99": 10.7,
+      "max": 11.8,
+      "threads": 0.0,
+      "peak": 0.29
+    },
+    "preset 01": {
+      "mean": 9.5,
+      "p95": 10.2,
+      "p99": 10.6,
+      "max": 11.4,
+      "threads": 0.0,
+      "peak": 0.35
+    },
+    "preset 02": {
+      "mean": 9.6,
+      "p95": 10.4,
+      "p99": 10.8,
+      "max": 11.6,
+      "threads": -0.0,
+      "peak": 0.28
+    },
+    "preset 03": {
+      "mean": 9.5,
+      "p95": 10.2,
+      "p99": 10.7,
+      "max": 11.5,
+      "threads": 0.0,
+      "peak": 0.4
+    },
+    "preset 04": {
+      "mean": 10.3,
+      "p95": 11.1,
+      "p99": 11.5,
+      "max": 12.4,
+      "threads": 0.0,
+      "peak": 0.37
+    },
+    "preset 05": {
+      "mean": 9.6,
+      "p95": 10.4,
+      "p99": 10.9,
+      "max": 11.7,
+      "threads": -0.0,
+      "peak": 0.27
+    },
+    "preset 06": {
+      "mean": 9.6,
+      "p95": 10.3,
+      "p99": 10.8,
+      "max": 12.0,
+      "threads": 0.0,
+      "peak": 0.32
+    },
+    "preset 07": {
+      "mean": 9.6,
+      "p95": 10.4,
+      "p99": 10.7,
+      "max": 11.1,
+      "threads": 0.0,
+      "peak": 0.41
+    },
+    "preset 08": {
+      "mean": 9.6,
+      "p95": 10.3,
+      "p99": 10.6,
+      "max": 11.4,
+      "threads": 0.0,
+      "peak": 0.43
+    },
+    "preset 09": {
+      "mean": 10.0,
+      "p95": 10.8,
+      "p99": 11.2,
+      "max": 12.0,
+      "threads": 0.0,
+      "peak": 0.33
+    },
+    "preset 10": {
+      "mean": 9.6,
+      "p95": 10.4,
+      "p99": 10.8,
+      "max": 12.9,
+      "threads": 0.0,
+      "peak": 0.29
+    },
+    "preset 11": {
+      "mean": 9.6,
+      "p95": 10.3,
+      "p99": 10.7,
+      "max": 11.4,
+      "threads": 0.0,
+      "peak": 0.2
+    }
+  },
+  "installed_10s": {
+    "idle": {
+      "mean": 3.0,
+      "p95": 3.2,
+      "p99": 3.3,
+      "max": 4.8,
+      "threads": 0.0,
+      "peak": 0.0
+    },
+    "1 voices": {
+      "mean": 5.6,
+      "p95": 6.5,
+      "p99": 6.8,
+      "max": 7.7,
+      "threads": 0.0,
+      "peak": 0.43
+    },
+    "4 voices": {
+      "mean": 5.6,
+      "p95": 6.0,
+      "p99": 6.3,
+      "max": 7.3,
+      "threads": -0.0,
+      "peak": 0.13
+    },
+    "all-param sweep": {
+      "mean": 6.1,
+      "p95": 8.1,
+      "p99": 8.3,
+      "max": 8.5,
+      "threads": 0.0,
+      "peak": 0.0
+    },
+    "release tail": {
+      "mean": 5.5,
+      "p95": 6.0,
+      "p99": 7.3,
+      "max": 8.4,
+      "threads": 0.0,
+      "peak": 0.0
+    },
+    "basic dry": {
+      "mean": 5.9,
+      "p95": 6.3,
+      "p99": 7.0,
+      "max": 7.5,
+      "threads": 0.0,
+      "peak": 0.11
+    },
+    "filter sweep": {
+      "mean": 6.3,
+      "p95": 6.7,
+      "p99": 6.8,
+      "max": 7.0,
+      "threads": 0.0,
+      "peak": 0.4
+    },
+    "heavy echo": {
+      "mean": 5.6,
+      "p95": 6.0,
+      "p99": 6.6,
+      "max": 7.1,
+      "threads": -0.0,
+      "peak": 0.36
+    },
+    "freeze": {
+      "mean": 6.6,
+      "p95": 7.0,
+      "p99": 7.2,
+      "max": 7.8,
+      "threads": 0.0,
+      "peak": 0.2
+    },
+    "reverb full": {
+      "mean": 6.0,
+      "p95": 6.4,
+      "p99": 6.8,
+      "max": 7.3,
+      "threads": 0.0,
+      "peak": 0.26
+    },
+    "all modulation": {
+      "mean": 6.4,
+      "p95": 6.8,
+      "p99": 6.9,
+      "max": 7.5,
+      "threads": 0.0,
+      "peak": 0.36
+    },
+    "preset 00": {
+      "mean": 5.6,
+      "p95": 6.1,
+      "p99": 6.9,
+      "max": 7.4,
+      "threads": 0.0,
+      "peak": 0.29
+    },
+    "preset 01": {
+      "mean": 5.5,
+      "p95": 5.9,
+      "p99": 6.0,
+      "max": 6.2,
+      "threads": 0.0,
+      "peak": 0.35
+    },
+    "preset 02": {
+      "mean": 6.1,
+      "p95": 6.5,
+      "p99": 6.8,
+      "max": 7.6,
+      "threads": 0.0,
+      "peak": 0.28
+    },
+    "preset 03": {
+      "mean": 5.5,
+      "p95": 5.9,
+      "p99": 6.5,
+      "max": 6.9,
+      "threads": -0.0,
+      "peak": 0.4
+    },
+    "preset 04": {
+      "mean": 6.2,
+      "p95": 6.8,
+      "p99": 7.4,
+      "max": 9.4,
+      "threads": 0.0,
+      "peak": 0.37
+    },
+    "preset 05": {
+      "mean": 6.4,
+      "p95": 7.7,
+      "p99": 8.0,
+      "max": 9.1,
+      "threads": -0.0,
+      "peak": 0.27
+    },
+    "preset 06": {
+      "mean": 6.0,
+      "p95": 6.5,
+      "p99": 6.9,
+      "max": 7.4,
+      "threads": 0.0,
+      "peak": 0.32
+    },
+    "preset 07": {
+      "mean": 5.7,
+      "p95": 6.3,
+      "p99": 6.6,
+      "max": 7.7,
+      "threads": 0.0,
+      "peak": 0.41
+    },
+    "preset 08": {
+      "mean": 5.6,
+      "p95": 6.3,
+      "p99": 6.8,
+      "max": 7.8,
+      "threads": 0.0,
+      "peak": 0.43
+    },
+    "preset 09": {
+      "mean": 6.7,
+      "p95": 7.5,
+      "p99": 8.3,
+      "max": 9.7,
+      "threads": 0.0,
+      "peak": 0.33
+    },
+    "preset 10": {
+      "mean": 5.7,
+      "p95": 6.3,
+      "p99": 7.1,
+      "max": 7.8,
+      "threads": 0.0,
+      "peak": 0.29
+    },
+    "preset 11": {
+      "mean": 6.2,
+      "p95": 6.9,
+      "p99": 7.4,
+      "max": 9.8,
+      "threads": 0.0,
+      "peak": 0.2
+    }
+  },
+  "interval_trials": {
+    "8": {
+      "mean": 6.2,
+      "p95": 8.1,
+      "p99": 8.4,
+      "max": 9.3,
+      "threads": 0.0,
+      "peak": 0.17
+    },
+    "16": {
+      "mean": 6.1,
+      "p95": 8.0,
+      "p99": 8.5,
+      "max": 9.4,
+      "threads": 0.0,
+      "peak": 0.17
+    },
+    "32": {
+      "mean": 6.1,
+      "p95": 8.0,
+      "p99": 8.5,
+      "max": 9.1,
+      "threads": 0.0,
+      "peak": 0.17
+    }
+  },
+  "audio_comparison": [
+    {
+      "preset": 0,
+      "rms_delta_db": 1.0194917168616648e-07,
+      "residual_dbfs": -136.75338459387274,
+      "peak_old": 0.425872802734375,
+      "peak_new": 0.425872802734375
+    },
+    {
+      "preset": 1,
+      "rms_delta_db": 1.43768545625879e-05,
+      "residual_dbfs": -116.99906650878012,
+      "peak_old": 0.34661865234375,
+      "peak_new": 0.34661865234375
+    },
+    {
+      "preset": 2,
+      "rms_delta_db": -7.247383252706471e-05,
+      "residual_dbfs": -79.87461845062515,
+      "peak_old": 0.2841796875,
+      "peak_new": 0.284149169921875
+    },
+    {
+      "preset": 3,
+      "rms_delta_db": -0.0007300983885854916,
+      "residual_dbfs": -57.174850596710584,
+      "peak_old": 0.395050048828125,
+      "peak_new": 0.395050048828125
+    },
+    {
+      "preset": 4,
+      "rms_delta_db": 0.00016430400331673438,
+      "residual_dbfs": -63.52401810058214,
+      "peak_old": 0.371917724609375,
+      "peak_new": 0.371917724609375
+    },
+    {
+      "preset": 5,
+      "rms_delta_db": 0.00020929696972452289,
+      "residual_dbfs": -67.29383994021755,
+      "peak_old": 0.2657470703125,
+      "peak_new": 0.2657470703125
+    },
+    {
+      "preset": 6,
+      "rms_delta_db": 0.002681043964959812,
+      "residual_dbfs": -43.74650825724644,
+      "peak_old": 0.3245849609375,
+      "peak_new": 0.3245849609375
+    },
+    {
+      "preset": 7,
+      "rms_delta_db": 0.0008313900009969871,
+      "residual_dbfs": -46.57721048758626,
+      "peak_old": 0.412811279296875,
+      "peak_new": 0.412811279296875
+    },
+    {
+      "preset": 8,
+      "rms_delta_db": 7.438548945103181e-05,
+      "residual_dbfs": -73.84289193454951,
+      "peak_old": 0.43035888671875,
+      "peak_new": 0.43035888671875
+    },
+    {
+      "preset": 9,
+      "rms_delta_db": -0.00014204101776478254,
+      "residual_dbfs": -60.35602597984528,
+      "peak_old": 0.332672119140625,
+      "peak_new": 0.332672119140625
+    },
+    {
+      "preset": 10,
+      "rms_delta_db": -0.00041561899399315794,
+      "residual_dbfs": -52.11584708725844,
+      "peak_old": 0.286041259765625,
+      "peak_new": 0.286041259765625
+    },
+    {
+      "preset": 11,
+      "rms_delta_db": -0.000201508552333347,
+      "residual_dbfs": -53.221727089867734,
+      "peak_old": 0.188720703125,
+      "peak_new": 0.188720703125
+    }
+  ]
+}

@@ -1,5 +1,8 @@
 # Force verification — 1.0.1
 
+Historical 1.0.1 record. Current 1.0.2 results and compatibility limits are in
+[PERFORMANCE_1.0.2.md](PERFORMANCE_1.0.2.md).
+
 The current build is installed at
 `/media/AKAI_SSD/Synths/Dub Force - VST - Dub Force Siren/` on the existing
 Force at 192.168.2.31. Existing deployment tooling and target were reused.

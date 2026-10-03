@@ -7,11 +7,11 @@
     "public_parameters_bound": 51,
     "primary_qlinks": [
       "pitch",
+      "wave",
       "rate",
       "depth",
       "zap_sweep",
       "cutoff",
-      "resonance",
       "delay_time",
       "feedback"
     ],
@@ -64,11 +64,11 @@
     "public_parameters_bound": 51,
     "primary_qlinks": [
       "pitch",
+      "wave",
       "rate",
       "depth",
       "zap_sweep",
       "cutoff",
-      "resonance",
       "delay_time",
       "feedback"
     ],
@@ -121,11 +121,11 @@
     "public_parameters_bound": 51,
     "primary_qlinks": [
       "pitch",
+      "wave",
       "rate",
       "depth",
       "zap_sweep",
       "cutoff",
-      "resonance",
       "delay_time",
       "feedback"
     ],

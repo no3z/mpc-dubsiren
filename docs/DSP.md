@@ -37,7 +37,7 @@ match source pitch multipliers. MIDI notes gate the siren without replacing
 its pitch control. Held-note bitsets keep it open while any note remains down.
 
 Attack/release use exponential source time constants max(1ms,attack/4.6),
-max(3ms,release/4.6). ZAP is an exponential f0→max(30,f0×2^(sweep/12)) ramp,
+max(3ms,release/4.6). ZAP is an exponential f0→max(1,f0×2^(sweep/12)) ramp,
 followed by release at max(attack,zapTime). Repetitions use native sample timing.
 Touch FIRE produces a bounded250ms siren pulse or complete ZAP; MIDI pads supply
 press/release and LATCH sustains. True native touch-hold was not established.
@@ -69,3 +69,12 @@ Version 1.0.1 uses 16-sample interpolated exponential effect-control endpoints,
 a high-resolution modulation/panning sine lookup and double ZAP recurrence.
 Audible sine, filter state precision and saturation are preserved. See
 [PERFORMANCE.md](PERFORMANCE.md) for measurements, approximation bounds and A/B limits.
+
+Version 1.0.2 extends the base Pitch control to 10–2400 Hz with logarithmic
+normalization. Mapping runs at control API rate. Signed FM and bidirectional
+phase wrapping remain; the positive base/ZAP floor is now 1 Hz. Wave's external
+order is SINE/TRIANGLE/SAW/SQUARE/NOISE; DFS1 retains legacy physical IDs.
+Core and effects use shared 16-sample control boundaries; coefficients and
+sub-audible double-state cleanup run every 32 samples. The reverb topology,
+audible oscillator and full-rate modulation remain. See
+[the 1.0.2 report](PERFORMANCE_1.0.2.md) for measured savings and compatibility limits.

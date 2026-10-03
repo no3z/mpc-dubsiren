@@ -47,6 +47,15 @@ int main() {
         effects.process(0.f,c,l,r);
         require(l==0.f&&r==0.f,"reset discards tails");
     }
+    // A zero wet gain must keep the connected reverb's history. Turn it on
+    // after an inaudible impulse, before the primary delay can return anything.
+    c.character=0;c.time=.4166667f;c.mix=0;c.feedback=0;c.reverb=0;
+    for(int i=0;i<44100*3;++i)effects.process(0,c,l,r);
+    effects.reset();effects.process(1,c,l,r);
+    for(int i=1;i<8820;++i)effects.process(0,c,l,r);
+    c.reverb=1;double latent=0;
+    for(int i=0;i<5292;++i){effects.process(0,c,l,r);latent+=l*l+r*r;}
+    require(latent>1e-5,"zero reverb mix preserves latent tail");
     // Panning must deliver audible alternating left/right energy in held signal.
     c.character=0;c.time=.05f;c.feedback=.7f;c.reverb=.4f;c.ping=1.f;c.playing=true;
     double difference=0.f;

@@ -44,7 +44,7 @@ for tab in tui['tabs']:
       assert d['numButtonsInGroup']==len(p['options']);assert 0<=d['buttonId']<len(p['options']);selectors.setdefault(key,set()).add(d['buttonId'])
   opts=p.get('options');range_=' / '.join(opts) if opts else f"{p['min']:g}…{p['max']:g} {p.get('unit','')}"
   default=ui.physical_default(p);default=opts[default] if opts else f"{default:g} {p.get('unit','')}"
-  span=p.get('max',1)-p.get('min',0);format_='option text' if opts else ('3 decimals' if p.get('unit')=='s' else '2 decimals' if p.get('unit')=='Hz' and span<=32 else '0 decimals' if span>20 or p.get('unit')=='Hz' else '1 decimal')
+  span=p.get('max',1)-p.get('min',0);format_='option text' if opts else ('1 decimal below 100 Hz; whole Hz above' if p.get('scale')=='log' else '3 decimals' if p.get('unit')=='s' else '2 decimals' if p.get('unit')=='Hz' and span<=32 else '0 decimals' if span>20 or p.get('unit')=='Hz' else '1 decimal')
   line=next((j+1 for j,l in enumerate(source) if 'P_'+key in l),None);assert line is not None or key.endswith(('low','mid','high'))
   rows.append((tab['tabName'],name,keyid,key,dsp[key],range_,default,format_,', '.join(qlinks[keyid]) or 'touch only',box,conditional))
   if not conditional:
@@ -62,9 +62,9 @@ correct group size. There are no duplicate local definition keys or duplicate
 active IDs inside a Q-Link bank. Hidden popup ID 51 is transient; IDs 52–56 remain
 compatibility flags, with no sound role.
 
-Main Q-Link order is slots 13, 9, 5, 1, 14, 10, 6, 2: Pitch, Rate, Depth, Zap Sweep,
-Cutoff, Resonance, Delay Time, Feedback. Slots 15, 11, 7, 3, 16, 12, 8, 4 form the second
-set: Attack, Release, LFO2 amount, LFO3 amount, Echo Mix, Ping, Reverb, Output.
+Main Q-Link order is slots 13, 9, 5, 1, 14, 10, 6, 2: Pitch, Wave, LFO Rate,
+LFO Depth, Zap Sweep, Cutoff, Delay Time, Feedback. Slots 15, 11, 7, 3, 16, 12, 8, 4 form the second
+set: Resonance, Preset, Attack, Release, Echo Mix, Ping, Reverb, Output.
 These are native 16-slot addresses, not a claim that Force has 16 physical knobs.
 The Force selects subsets/banks; exact hardware selection must be tested.
 Utility maps six EQ bands and Fast/Slow/octave up/down. Unused slots are -1.

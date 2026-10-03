@@ -1,5 +1,8 @@
 # 1.0.1 release hardening — 2026-10-03
 
+Historical 1.0.1 record. Current 1.0.2 results and compatibility limits are in
+[PERFORMANCE_1.0.2.md](PERFORMANCE_1.0.2.md).
+
 The installed release candidate remains **1.0.1**, untouched. No DSP, UI,
 parameter, preset or device configuration change was justified. One packaging
 reproducibility issue was fixed: CPU metadata now comes from a checked-in verified
