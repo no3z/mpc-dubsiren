@@ -1,0 +1,6 @@
+FROM debian:bullseye-slim
+# Bullseye glibc2.31 and GCC10 cross toolchain match the MPC OS2/3 ABI floor.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf \
+    python3 ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /work

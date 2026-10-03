@@ -1,0 +1,173 @@
+[
+  {
+    "assets_checked": 106,
+    "main_touch_regions": 55,
+    "utility_touch_regions": 10,
+    "parameters": 57,
+    "public_parameters_bound": 51,
+    "primary_qlinks": [
+      "pitch",
+      "rate",
+      "depth",
+      "zap_sweep",
+      "cutoff",
+      "resonance",
+      "delay_time",
+      "feedback"
+    ],
+    "bounds_and_overlap_errors": [],
+    "minimum_primary_touch_size": {
+      "pitch": [
+        208,
+        112
+      ],
+      "rate": [
+        125,
+        148
+      ],
+      "depth": [
+        125,
+        148
+      ],
+      "cutoff": [
+        83,
+        160
+      ],
+      "resonance": [
+        87,
+        160
+      ],
+      "delay_time": [
+        132,
+        156
+      ],
+      "feedback": [
+        136,
+        156
+      ],
+      "reverb": [
+        176,
+        154
+      ],
+      "output": [
+        176,
+        154
+      ]
+    },
+    "iteration": 1
+  },
+  {
+    "assets_checked": 106,
+    "main_touch_regions": 55,
+    "utility_touch_regions": 10,
+    "parameters": 57,
+    "public_parameters_bound": 51,
+    "primary_qlinks": [
+      "pitch",
+      "rate",
+      "depth",
+      "zap_sweep",
+      "cutoff",
+      "resonance",
+      "delay_time",
+      "feedback"
+    ],
+    "bounds_and_overlap_errors": [],
+    "minimum_primary_touch_size": {
+      "pitch": [
+        208,
+        112
+      ],
+      "rate": [
+        125,
+        148
+      ],
+      "depth": [
+        125,
+        148
+      ],
+      "cutoff": [
+        83,
+        160
+      ],
+      "resonance": [
+        87,
+        160
+      ],
+      "delay_time": [
+        132,
+        156
+      ],
+      "feedback": [
+        136,
+        156
+      ],
+      "reverb": [
+        176,
+        154
+      ],
+      "output": [
+        176,
+        154
+      ]
+    },
+    "iteration": 2
+  },
+  {
+    "assets_checked": 106,
+    "main_touch_regions": 55,
+    "utility_touch_regions": 10,
+    "parameters": 57,
+    "public_parameters_bound": 51,
+    "primary_qlinks": [
+      "pitch",
+      "rate",
+      "depth",
+      "zap_sweep",
+      "cutoff",
+      "resonance",
+      "delay_time",
+      "feedback"
+    ],
+    "bounds_and_overlap_errors": [],
+    "minimum_primary_touch_size": {
+      "pitch": [
+        208,
+        112
+      ],
+      "rate": [
+        125,
+        148
+      ],
+      "depth": [
+        125,
+        148
+      ],
+      "cutoff": [
+        83,
+        160
+      ],
+      "resonance": [
+        87,
+        160
+      ],
+      "delay_time": [
+        132,
+        156
+      ],
+      "feedback": [
+        136,
+        156
+      ],
+      "reverb": [
+        176,
+        154
+      ],
+      "output": [
+        176,
+        154
+      ]
+    },
+    "iteration": 3
+  }
+]

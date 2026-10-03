@@ -1,0 +1,1090 @@
+[
+  {
+    "control": "PITCH",
+    "param": "pitch",
+    "parent": [
+      28,
+      344,
+      208,
+      112
+    ],
+    "widget": [
+      32,
+      366,
+      200,
+      58
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "ATTACK",
+    "param": "attack",
+    "parent": [
+      28,
+      470,
+      100,
+      62
+    ],
+    "widget": [
+      32,
+      488,
+      92,
+      20
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "RELEASE",
+    "param": "release",
+    "parent": [
+      136,
+      470,
+      100,
+      62
+    ],
+    "widget": [
+      140,
+      488,
+      92,
+      20
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "LEVEL",
+    "param": "level",
+    "parent": [
+      28,
+      544,
+      100,
+      62
+    ],
+    "widget": [
+      32,
+      562,
+      92,
+      20
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "NOISE",
+    "param": "noise",
+    "parent": [
+      136,
+      544,
+      100,
+      62
+    ],
+    "widget": [
+      140,
+      562,
+      92,
+      20
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "LFO RATE",
+    "param": "rate",
+    "parent": [
+      268,
+      106,
+      125,
+      148
+    ],
+    "widget": [
+      272,
+      128,
+      117,
+      94
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "LFO DEPTH",
+    "param": "depth",
+    "parent": [
+      401,
+      106,
+      125,
+      148
+    ],
+    "widget": [
+      405,
+      128,
+      117,
+      94
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "LFO2 RATE",
+    "param": "lfo2_rate",
+    "parent": [
+      268,
+      330,
+      125,
+      72
+    ],
+    "widget": [
+      272,
+      348,
+      117,
+      29
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "RATE MOD",
+    "param": "lfo2_amount",
+    "parent": [
+      401,
+      330,
+      125,
+      72
+    ],
+    "widget": [
+      405,
+      348,
+      117,
+      29
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "LFO3 RATE",
+    "param": "lfo3_rate",
+    "parent": [
+      268,
+      414,
+      125,
+      72
+    ],
+    "widget": [
+      272,
+      432,
+      117,
+      29
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "DEPTH MOD",
+    "param": "lfo3_amount",
+    "parent": [
+      401,
+      414,
+      125,
+      72
+    ],
+    "widget": [
+      405,
+      432,
+      117,
+      29
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "SWEEP",
+    "param": "zap_sweep",
+    "parent": [
+      268,
+      518,
+      82,
+      86
+    ],
+    "widget": [
+      272,
+      536,
+      74,
+      43
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "TIME",
+    "param": "zap_time",
+    "parent": [
+      356,
+      518,
+      82,
+      86
+    ],
+    "widget": [
+      360,
+      536,
+      74,
+      43
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "REPEAT",
+    "param": "repeat",
+    "parent": [
+      444,
+      518,
+      82,
+      86
+    ],
+    "widget": [
+      448,
+      536,
+      74,
+      43
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "CUTOFF",
+    "param": "cutoff",
+    "parent": [
+      558,
+      106,
+      83,
+      160
+    ],
+    "widget": [
+      562,
+      128,
+      75,
+      106
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "RESO",
+    "param": "resonance",
+    "parent": [
+      649,
+      106,
+      87,
+      160
+    ],
+    "widget": [
+      653,
+      128,
+      79,
+      106
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "CHOP",
+    "param": "chop_rate",
+    "parent": [
+      558,
+      340,
+      83,
+      110
+    ],
+    "widget": [
+      562,
+      362,
+      75,
+      63
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "DEPTH",
+    "param": "chop_amount",
+    "parent": [
+      649,
+      340,
+      87,
+      110
+    ],
+    "widget": [
+      653,
+      362,
+      79,
+      63
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "DELAY",
+    "param": "delay_time",
+    "parent": [
+      768,
+      106,
+      132,
+      156
+    ],
+    "widget": [
+      772,
+      128,
+      124,
+      102
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "FEEDBACK",
+    "param": "feedback",
+    "parent": [
+      908,
+      106,
+      136,
+      156
+    ],
+    "widget": [
+      912,
+      128,
+      128,
+      102
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "LO CUT",
+    "param": "delay_hp",
+    "parent": [
+      768,
+      394,
+      132,
+      72
+    ],
+    "widget": [
+      772,
+      412,
+      124,
+      29
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "HI CUT",
+    "param": "delay_lp",
+    "parent": [
+      912,
+      394,
+      132,
+      72
+    ],
+    "widget": [
+      916,
+      412,
+      124,
+      29
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "ECHO MIX",
+    "param": "delay_mix",
+    "parent": [
+      768,
+      478,
+      132,
+      68
+    ],
+    "widget": [
+      772,
+      496,
+      124,
+      25
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "PING PONG",
+    "param": "ping",
+    "parent": [
+      912,
+      478,
+      132,
+      68
+    ],
+    "widget": [
+      916,
+      496,
+      124,
+      25
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "REVERB",
+    "param": "reverb",
+    "parent": [
+      1076,
+      106,
+      176,
+      154
+    ],
+    "widget": [
+      1080,
+      128,
+      168,
+      100
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "OUTPUT",
+    "param": "output",
+    "parent": [
+      1076,
+      276,
+      176,
+      154
+    ],
+    "widget": [
+      1080,
+      298,
+      168,
+      100
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "SQUARE",
+    "param": "wave",
+    "parent": [
+      28,
+      198,
+      65,
+      40
+    ],
+    "widget": [
+      28,
+      198,
+      65,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "SAW",
+    "param": "wave",
+    "parent": [
+      99,
+      198,
+      65,
+      40
+    ],
+    "widget": [
+      99,
+      198,
+      65,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "TRI",
+    "param": "wave",
+    "parent": [
+      170,
+      198,
+      65,
+      40
+    ],
+    "widget": [
+      170,
+      198,
+      65,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "SINE",
+    "param": "wave",
+    "parent": [
+      28,
+      244,
+      65,
+      40
+    ],
+    "widget": [
+      28,
+      244,
+      65,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "NOISE",
+    "param": "wave",
+    "parent": [
+      99,
+      244,
+      65,
+      40
+    ],
+    "widget": [
+      99,
+      244,
+      65,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "SIREN",
+    "param": "mode",
+    "parent": [
+      28,
+      294,
+      101,
+      38
+    ],
+    "widget": [
+      28,
+      294,
+      101,
+      38
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "ZAP",
+    "param": "mode",
+    "parent": [
+      135,
+      294,
+      101,
+      38
+    ],
+    "widget": [
+      135,
+      294,
+      101,
+      38
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "TRI",
+    "param": "lfo_wave",
+    "parent": [
+      268,
+      280,
+      60,
+      38
+    ],
+    "widget": [
+      268,
+      280,
+      60,
+      38
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "SQR",
+    "param": "lfo_wave",
+    "parent": [
+      334,
+      280,
+      60,
+      38
+    ],
+    "widget": [
+      334,
+      280,
+      60,
+      38
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "SAW",
+    "param": "lfo_wave",
+    "parent": [
+      400,
+      280,
+      60,
+      38
+    ],
+    "widget": [
+      400,
+      280,
+      60,
+      38
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "SINE",
+    "param": "lfo_wave",
+    "parent": [
+      466,
+      280,
+      60,
+      38
+    ],
+    "widget": [
+      466,
+      280,
+      60,
+      38
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "LP",
+    "param": "filter_type",
+    "parent": [
+      558,
+      286,
+      55,
+      40
+    ],
+    "widget": [
+      558,
+      286,
+      55,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "BP",
+    "param": "filter_type",
+    "parent": [
+      619,
+      286,
+      55,
+      40
+    ],
+    "widget": [
+      619,
+      286,
+      55,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "HP",
+    "param": "filter_type",
+    "parent": [
+      680,
+      286,
+      55,
+      40
+    ],
+    "widget": [
+      680,
+      286,
+      55,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "CLEAN",
+    "param": "character",
+    "parent": [
+      768,
+      290,
+      88,
+      40
+    ],
+    "widget": [
+      768,
+      290,
+      88,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "DESK",
+    "param": "character",
+    "parent": [
+      862,
+      290,
+      88,
+      40
+    ],
+    "widget": [
+      862,
+      290,
+      88,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "SMOKE",
+    "param": "character",
+    "parent": [
+      956,
+      290,
+      88,
+      40
+    ],
+    "widget": [
+      956,
+      290,
+      88,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "ORBIT",
+    "param": "character",
+    "parent": [
+      768,
+      336,
+      88,
+      40
+    ],
+    "widget": [
+      768,
+      336,
+      88,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "CLASH",
+    "param": "character",
+    "parent": [
+      862,
+      336,
+      88,
+      40
+    ],
+    "widget": [
+      862,
+      336,
+      88,
+      40
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "FIRE",
+    "param": "fire",
+    "parent": [
+      28,
+      112,
+      140,
+      64
+    ],
+    "widget": [
+      28,
+      112,
+      140,
+      64
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "LATCH",
+    "param": "latch",
+    "parent": [
+      176,
+      112,
+      60,
+      64
+    ],
+    "widget": [
+      176,
+      112,
+      60,
+      64
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "8 BIT",
+    "param": "crush",
+    "parent": [
+      558,
+      482,
+      178,
+      44
+    ],
+    "widget": [
+      558,
+      482,
+      178,
+      44
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "FILTER FX",
+    "param": "filter_hold",
+    "parent": [
+      558,
+      536,
+      178,
+      44
+    ],
+    "widget": [
+      558,
+      536,
+      178,
+      44
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "FREEZE",
+    "param": "freeze",
+    "parent": [
+      768,
+      558,
+      86,
+      44
+    ],
+    "widget": [
+      768,
+      558,
+      86,
+      44
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "BEND",
+    "param": "bend",
+    "parent": [
+      862,
+      558,
+      86,
+      44
+    ],
+    "widget": [
+      862,
+      558,
+      86,
+      44
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "INVERT",
+    "param": "invert",
+    "parent": [
+      956,
+      558,
+      88,
+      44
+    ],
+    "widget": [
+      956,
+      558,
+      88,
+      44
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "KILL",
+    "param": "kill",
+    "parent": [
+      1076,
+      464,
+      176,
+      48
+    ],
+    "widget": [
+      1076,
+      464,
+      176,
+      48
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "STOP",
+    "param": "stop",
+    "parent": [
+      1076,
+      526,
+      176,
+      62
+    ],
+    "widget": [
+      1076,
+      526,
+      176,
+      62
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "OSC LOW",
+    "param": "osc_low",
+    "parent": [
+      32,
+      94,
+      376,
+      168
+    ],
+    "widget": [
+      36,
+      116,
+      368,
+      114
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "OSC MID",
+    "param": "osc_mid",
+    "parent": [
+      448,
+      94,
+      376,
+      168
+    ],
+    "widget": [
+      452,
+      116,
+      368,
+      114
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "OSC HIGH",
+    "param": "osc_high",
+    "parent": [
+      864,
+      94,
+      376,
+      168
+    ],
+    "widget": [
+      868,
+      116,
+      368,
+      114
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "MASTER LOW",
+    "param": "master_low",
+    "parent": [
+      32,
+      304,
+      376,
+      168
+    ],
+    "widget": [
+      36,
+      326,
+      368,
+      114
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "MASTER MID",
+    "param": "master_mid",
+    "parent": [
+      448,
+      304,
+      376,
+      168
+    ],
+    "widget": [
+      452,
+      326,
+      368,
+      114
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "MASTER HIGH",
+    "param": "master_high",
+    "parent": [
+      864,
+      304,
+      376,
+      168
+    ],
+    "widget": [
+      868,
+      326,
+      368,
+      114
+    ],
+    "type": "Knob"
+  },
+  {
+    "control": "FAST",
+    "param": "fast",
+    "parent": [
+      48,
+      532,
+      272,
+      58
+    ],
+    "widget": [
+      48,
+      532,
+      272,
+      58
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "SLOW",
+    "param": "slow",
+    "parent": [
+      360,
+      532,
+      272,
+      58
+    ],
+    "widget": [
+      360,
+      532,
+      272,
+      58
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "OCT UP",
+    "param": "oct_up",
+    "parent": [
+      672,
+      532,
+      272,
+      58
+    ],
+    "widget": [
+      672,
+      532,
+      272,
+      58
+    ],
+    "type": "Button"
+  },
+  {
+    "control": "OCT DOWN",
+    "param": "oct_down",
+    "parent": [
+      984,
+      532,
+      272,
+      58
+    ],
+    "widget": [
+      984,
+      532,
+      272,
+      58
+    ],
+    "type": "Button"
+  }
+]

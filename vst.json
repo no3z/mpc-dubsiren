@@ -1,0 +1,25 @@
+{
+  "name": "Dub Force Siren",
+  "vendor": "Dub Force",
+  "uid": "DbSr",
+  "version": 1001,
+  "so": "dub_force_siren.so",
+  "params": "params.json",
+  "layout": "layout.conf",
+  "build": {
+    "root": ".",
+    "sources": [
+      "src/engine.cpp",
+      "src/siren.cpp",
+      "src/effects.cpp"
+    ],
+    "cflags": [
+      "-Isrc",
+      "-Ivendor/mpc-vst-plugins/wrapper",
+      "-DDUB_TYPED_PARAMETERS"
+    ],
+    "libs": [
+      "-lm"
+    ]
+  }
+}
