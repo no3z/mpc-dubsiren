@@ -1,7 +1,6 @@
 #pragma once
 #include "param_ids.h"
 namespace dub {
-constexpr float SampleRate = 44100.0f;
 class Siren {
 public:
     Siren();

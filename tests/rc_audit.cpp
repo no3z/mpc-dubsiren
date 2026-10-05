@@ -30,21 +30,20 @@ static void stateAudit(){
  AEffect* a=VSTPluginMain(host);require(a!=nullptr,"state source created");if(!a)return;
  for(int trial=0;trial<256;++trial){
   a->setParameter(a,dub::P_preset,float(trial%12)/11);
-  a->setParameter(a,dub::P_character,float(trial%5)/4);
-  for(int i=0;i<dub::P_Count;++i){if(i==dub::P_preset||i==dub::P_character||i==dub::P_fire||i==dub::P_stop)continue;
+  for(int i=0;i<dub::P_Count;++i){if(i==dub::P_preset||i==dub::P_fire||i==dub::P_stop)continue;
    const auto& p=PARAMS[i];float n=p.nopts?float(random32()%p.nopts)/(p.nopts-1):trial%16==0?0:trial%16==1?1:uniform();a->setParameter(a,i,n);}
   const auto expected=snapshot(a);const auto saved=chunk(a);
   AEffect* restored=VSTPluginMain(host);require(restored!=nullptr,"fresh restore instance");if(!restored)break;
   require(restored->dispatcher(restored,24,0,saved.size(),const_cast<char*>(saved.data()),0)==1,"restore accepted");compare(restored,expected);
-  // Restore into a changed existing instance too, without invoking preset/character side effects.
+  // Restore into a changed existing instance too, without invoking preset side effects.
   restored->setParameter(restored,dub::P_preset,float((trial+1)%12)/11);
   restored->dispatcher(restored,24,0,saved.size(),const_cast<char*>(saved.data()),0);compare(restored,expected);close(restored);
  }
  for(int preset=0;preset<12;++preset){a->setParameter(a,dub::P_preset,float(preset)/11);const auto expected=snapshot(a);auto saved=chunk(a);AEffect* b=VSTPluginMain(host);b->dispatcher(b,24,0,saved.size(),const_cast<char*>(saved.data()),0);compare(b,expected);close(b);}
  // Fired pulses, active notes and UI overlays are intentionally transient.
  a->setParameter(a,dub::P_preset,0);a->setParameter(a,dub::P_latch,0);a->setParameter(a,dub::P_fire,1);
- a->setParameter(a,51,1);MidiEvent m;m.midiData[0]=0x90;m.midiData[1]=60;m.midiData[2]=100;Events event;event.events[0]=&m;event.events[1]=nullptr;a->dispatcher(a,25,0,0,&event,0);
- auto saved=chunk(a);AEffect* b=VSTPluginMain(host);b->dispatcher(b,24,0,saved.size(),const_cast<char*>(saved.data()),0);float l[128],r[128];float* out[]={l,r};b->processReplacing(b,nullptr,out,128);double energy=0;for(int i=0;i<128;++i)energy+=l[i]*l[i]+r[i]*r[i];require(energy<1e-12,"FIRE/MIDI/audio tail not persisted");require(b->getParameter(b,51)==0,"preset popup not persisted");close(b);
+ a->setParameter(a,NPARAMS-1,1);MidiEvent m;m.midiData[0]=0x90;m.midiData[1]=60;m.midiData[2]=100;Events event;event.events[0]=&m;event.events[1]=nullptr;a->dispatcher(a,25,0,0,&event,0);
+ auto saved=chunk(a);AEffect* b=VSTPluginMain(host);b->dispatcher(b,24,0,saved.size(),const_cast<char*>(saved.data()),0);float l[128],r[128];float* out[]={l,r};b->processReplacing(b,nullptr,out,128);double energy=0;for(int i=0;i<128;++i)energy+=l[i]*l[i]+r[i]*r[i];require(energy<1e-12,"FIRE/MIDI/audio tail not persisted");require(b->getParameter(b,NPARAMS-1)==0,"preset popup not persisted");close(b);
  a->setParameter(a,dub::P_stop,1);a->setParameter(a,dub::P_latch,1);saved=chunk(a);b=VSTPluginMain(host);b->dispatcher(b,24,0,saved.size(),const_cast<char*>(saved.data()),0);energy=0;for(int k=0;k<100;++k){b->processReplacing(b,nullptr,out,128);for(int i=0;i<128;++i)energy+=l[i]*l[i]+r[i]*r[i];}require(energy>1e-4,"restored LATCH ON resumes sound");close(b);close(a);
  std::printf("STATE: 256 random snapshots restored fresh and in-place, 12 factory states, transient exclusions, latch behavior; failures=%d\n",failures);
 }
@@ -55,10 +54,10 @@ struct Meter {double peak=0,sumL=0,sumR=0,energy=0;uint64_t samples=0,limited=0;
 static void render(dub::Siren& s,float* l,float* r,int frames,Meter& m){s.render(l,r,frames);m.add(l,r,frames);}
 static void levels(){float l[128],r[128];
  for(int p=0;p<12;++p){dub::Siren s;s.set(dub::P_preset,p);s.set(dub::P_latch,1);Meter m;for(int k=0;k<44100*8/128;++k)render(s,l,r,128,m);require(m.energy>1e-5,"factory preset audible");char label[48];std::snprintf(label,sizeof(label),"preset %02d %s",p,PARAMS[dub::P_preset].opts[p]);m.print(label);}
- for(int mode=0;mode<8;++mode){dub::Siren s;s.set(dub::P_character,mode%5);s.set(dub::P_latch,1);s.set(dub::P_level,100);s.set(dub::P_output,100);s.set(dub::P_resonance,20);s.set(dub::P_cutoff,mode&1?200:9000);s.set(dub::P_delay_time,.05);s.set(dub::P_feedback,88);s.set(dub::P_delay_mix,100);s.set(dub::P_reverb,100);s.set(dub::P_pitch,mode==0?60:620);
- if(mode>=3){s.set(dub::P_depth,1400);s.set(dub::P_rate,24);s.set(dub::P_lfo2_amount,100);s.set(dub::P_lfo3_amount,100);s.set(dub::P_chop_amount,100);}
- if(mode==6){s.set(dub::P_crush,1);s.set(dub::P_osc_low,12);s.set(dub::P_master_low,12);}
- Meter m,steady;for(int k=0;k<44100*30/128;++k){if(mode==5&&k==44100*2/128){s.set(dub::P_freeze,1);s.set(dub::P_latch,0);}if(mode==7&&k%5==0)s.set(dub::P_fire,1);render(s,l,r,128,m);if(k>44100*20/128)steady.add(l,r,128);}
+ for(int mode=0;mode<8;++mode){dub::Siren s;s.set(dub::P_wave,mode%5);s.set(dub::P_latch,1);s.set(dub::P_output,100);s.set(dub::P_resonance,20);s.set(dub::P_cutoff,mode&1?200:9000);s.set(dub::P_delay_time,.05);s.set(dub::P_feedback,88);s.set(dub::P_delay_mix,100);s.set(dub::P_ping,mode>=4?100:0);s.set(dub::P_pitch,mode==0?60:620);
+ if(mode>=3){s.set(dub::P_depth,100);s.set(dub::P_rate,24);s.set(dub::P_lfo_wave,mode%4);}
+ if(mode==7){s.set(dub::P_mode,1);s.set(dub::P_zap_sweep,48);}
+ Meter m,steady;for(int k=0;k<44100*30/128;++k){if(mode==5&&k==44100*2/128)s.set(dub::P_latch,0);if(mode==7&&k%5==0)s.set(dub::P_fire,1);render(s,l,r,128,m);if(k>44100*20/128)steady.add(l,r,128);}
  char label[48];std::snprintf(label,sizeof(label),"maximum case %d",mode);m.print(label);std::snprintf(label,sizeof(label),"case %d final10sec",mode);steady.print(label);
  }
 }
@@ -67,8 +66,8 @@ static void stress(int seconds){dub::Siren s,probe;char saved[8192];const mpc_en
  for(int k=0;k<blocks;++k){
   if(k%173==0)s.set(dub::P_preset,float(random32()%12));
   if(k%19==0){for(int j=0;j<6;++j){const int id=random32()%dub::P_Count;if(id==dub::P_preset||id==dub::P_stop)continue;const auto& p=PARAMS[id];s.set(id,p.nopts?float(random32()%p.nopts):p.min+uniform()*(p.max-p.min));}}
-  s.set(dub::P_latch,1);s.set(dub::P_feedback,88);s.set(dub::P_level,100);s.set(dub::P_output,100);s.set(dub::P_lfo2_amount,100);s.set(dub::P_lfo3_amount,100);
-  if(k%7==0)s.set(dub::P_fire,1);if(k%257==0)s.set(dub::P_freeze,(k/257)&1);if(k%911==0)s.set(dub::P_stop,1);
+  s.set(dub::P_latch,1);s.set(dub::P_feedback,88);s.set(dub::P_output,100);
+  if(k%7==0)s.set(dub::P_fire,1);if(k%257==0)s.set(dub::P_mode,(k/257)&1);if(k%911==0)s.set(dub::P_stop,1);
   render(s,l,r,128,m);
   if(k%4096==0){require(api->get_param(&s,"state",saved,sizeof(saved))>0,"stress state serialize");api->set_param(&probe,"state",saved);for(int id=0;id<dub::P_Count;++id){float v=s.get(id);const auto& p=PARAMS[id];require(std::isfinite(v)&&v>=(p.nopts?0:p.min)&&v<=(p.nopts?float(p.nopts-1):p.max),"stress parameter range");require(v==probe.get(id),"stress state round-trip");}const auto r=resident();rssMin=std::min(rssMin,r);rssMax=std::max(rssMax,r);++chunks;}
  }

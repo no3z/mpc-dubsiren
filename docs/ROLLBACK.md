@@ -1,5 +1,24 @@
 # Plugin-only rollback
 
+## 2.0.0 → 1.0.2
+
+Make the `1.0.2-before-2.0.0` backup described in [INSTALL_FORCE.md](INSTALL_FORCE.md)
+before installing 2.0.0. Stage `rollback_force.sh`, `plugin_list.awk` and
+`resources/rollback-1.0.2.sha256` (the 116 files of the installed 1.0.2 payload)
+together, then run `sh rollback_force.sh --check 1.0.2`. To restore when wanted,
+save the project and run `sh rollback_force.sh --apply 1.0.2`.
+
+The backup was made on the Force on 2026-10-05 before installing 2.0.0:
+`/media/AKAI_SSD/Dub-Force-Siren-backups/1.0.2-before-2.0.0/` (all **116** files
+match `resources/rollback-1.0.2.sha256`; binary SHA-256 `fb7e3b4a…aeb5`) and
+`MPC.settings-before-2.0.0` (byte-identical to the live settings at that moment).
+`--check 1.0.2` **passed on the Force** after the backup and before the install.
+`--apply 1.0.2` has not been exercised on the Force or in the isolated fixture.
+The 2.0.0 installer also left `MPC.settings.bak-dub_force_siren-20261005-172344`
+beside the live settings.
+
+## 1.0.1 → 1.0.0
+
 The real Force backup at
 `/media/AKAI_SSD/Dub-Force-Siren-backups/1.0.0-before-1.0.1/` passed verification
 against all **108** files in the original device-backup manifest

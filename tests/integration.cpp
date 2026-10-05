@@ -40,12 +40,10 @@ static double renderHost(AEffect* a,int frames){
     double e=0;for(int i=0;i<frames;++i){if(!std::isfinite(l[i])||!std::isfinite(r[i])||std::abs(l[i])>1.001f||std::abs(r[i])>1.001f)++failures;e+=l[i]*l[i]+r[i]*r[i];}return e;
 }
 static void safeCore(dub::Siren& s){
-    s.set(dub::P_wave,3);s.set(dub::P_mode,0);s.set(dub::P_pitch,440);
-    s.set(dub::P_depth,0);s.set(dub::P_lfo2_amount,0);s.set(dub::P_lfo3_amount,0);
-    s.set(dub::P_zap_sweep,0);s.set(dub::P_repeat,0);s.set(dub::P_noise,0);
-    s.set(dub::P_delay_mix,0);s.set(dub::P_reverb,0);s.set(dub::P_crush,0);
-    s.set(dub::P_chop_amount,0);s.set(dub::P_level,50.f);s.set(dub::P_output,50.f);
-    s.set(dub::P_cutoff,20000);s.set(dub::P_resonance,0);s.set(dub::P_filter_type,0);
+    s.set(dub::P_wave,0);s.set(dub::P_mode,0);s.set(dub::P_pitch,440);
+    s.set(dub::P_depth,0);s.set(dub::P_zap_sweep,0);
+    s.set(dub::P_delay_mix,0);s.set(dub::P_output,50.f);
+    s.set(dub::P_cutoff,20000);s.set(dub::P_resonance,0);
     s.set(dub::P_attack,.003f);s.set(dub::P_release,.01f);
 }
 static void checkCore(){
@@ -99,8 +97,8 @@ int main(){
     check(a->dispatcher(a,10,0,0,nullptr,44100)==1 && a->dispatcher(a,10,0,0,nullptr,48000)==0,"fixed-rate wrapper accepts 44100 Hz and rejects unsupported 48000 Hz");
     {char display[24]={};a->dispatcher(a,7,dub::P_attack,0,display,0);
      check(!std::strcmp(display,"0.010"),"10 ms attack displays as 0.010 seconds");
-     a->dispatcher(a,7,dub::P_lfo2_rate,0,display,0);
-     check(!std::strcmp(display,"0.17"),"slow LFO2 displays as 0.17 Hz");
+     a->dispatcher(a,7,dub::P_rate,0,display,0);
+     check(!std::strcmp(display,"0.55"),"default LFO rate displays as 0.55 Hz");
      bool bounded=true;for(int i=0;i<NPARAMS;++i){struct {char text[24];unsigned char guard;} out{};out.guard=0x5a;a->dispatcher(a,7,i,0,out.text,0);bounded&=out.guard==0x5a;}
      check(bounded,"every parameter display stays within its 24 byte MPC buffer");}
     double silence=0;for(int i=0;i<20;++i)silence+=renderHost(b,128);check(silence<1e-10,"untriggered VST instance is silent");

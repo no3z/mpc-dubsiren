@@ -3,7 +3,7 @@
 #include <cstdio>
 int main(){
     dub::Siren s;
-    std::puts("{\"format\":\"DubForceSiren-1\",\"presets\":[");
+    std::puts("{\"format\":\"DubForceSiren-2\",\"presets\":[");
     for(int preset=0;preset<12;++preset){
         s.set(dub::P_preset,float(preset));
         std::printf("%s{\"name\":\"%s\",\"values\":{",preset ? ",\n" : "",PARAMS[dub::P_preset].opts[preset]);

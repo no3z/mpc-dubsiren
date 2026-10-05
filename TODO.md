@@ -33,3 +33,12 @@
 [x] Primary discrete named Wave Q-Link and secondary native factory Preset selector.
 [x] Actual 1.0.1 chunk fixtures, rapid preset/wave safety and allocation tests.
 [x] ARM/ZIP reproduced independently; 1.0.1 backup/rollback fixture and 1.0.2 installed verification.
+
+[x] 2.0.0: remove reverb, echo characters and every control without a Q-Link.
+[x] 2.0.0: sixteen Q-Links in knob order, grouped by function; single page mirroring both banks.
+[x] 2.0.0: NEON/SSE block engine; SIMD/scalar render equivalence; suites pass under qemu ARM.
+[x] 2.0.0: LFO Depth relative to Pitch, so Pitch works across 10–2400 Hz.
+[x] 2.0.0: keyed DFS2 state; 37 real 1.0.1 DFS1 chunks migrate by key.
+[ ] 2.0.0: back up 1.0.2 on the Force, install, and run docs/MANUAL_FORCE_TEST_CARD.md.
+[ ] 2.0.0: device benchmark (docs/PERFORMANCE_2.0.0.md commands); add resources/force-bench-2.0.0.json.
+[ ] 2.0.0: exercise `rollback_force.sh --check 1.0.2` against the real backup.

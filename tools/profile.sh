@@ -6,7 +6,7 @@ mkdir -p build/performance
 python3 vendor/mpc-vst-plugins/tools/gen_vst.py vst.json --params-h
 TASK_IMAGE="${DUB_ARM_IMAGE:-mnm-armhf-builder-glibc231:latest}"
 docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work "$TASK_IMAGE" \
- arm-linux-gnueabihf-g++ -O3 -flto -g -no-pie -std=c++17 -fno-math-errno \
+ arm-linux-gnueabihf-g++ -O3 -flto -g -no-pie -std=c++17 -fno-math-errno -ffp-contract=off \
  -mcpu=cortex-a17 -mfpu=neon-vfpv4 -mfloat-abi=hard -Isrc -Ibuild \
  tools/profile_sample.cpp src/siren.cpp src/effects.cpp -lm -ldl -o build/performance/sample-arm
 printf 'Copy sample-arm to Force /tmp; run with audio duration (120 default). Save stdout to samples.txt.\n'

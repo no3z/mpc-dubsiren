@@ -2,7 +2,7 @@
   "name": "Dub Force Siren",
   "vendor": "Dub Force",
   "uid": "DbSr",
-  "version": 1002,
+  "version": 2000,
   "so": "dub_force_siren.so",
   "params": "params.json",
   "layout": "layout.conf",

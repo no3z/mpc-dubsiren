@@ -87,6 +87,12 @@ static float *ins[2] = {inL, inR}, *outs[2] = {outL, outR};
 static MidiEv mev[64];
 static Events evs;
 static int synth, sweep_all;
+#ifdef SIREN_PROFILES
+/* Dub Force Siren stages look parameters up by key, so index changes cannot skew them. */
+static int param(const char *key) { for (int i = 0; i < NPARAMS; i++) if (!strcmp(PARAMS[i].key, key)) return i; return -1; }
+static float option(const char *key, int value) { return (float)value / (PARAMS[param(key)].nopts - 1); }
+#endif
+static int sweep_param = -1;
 static unsigned rng = 12345;
 static float frand(void) { rng = rng * 1664525u + 1013904223u; return (rng >> 8) / 16777216.0f; }
 
@@ -129,7 +135,7 @@ static Stage run(const char *name, int mode, int voices, double seconds) {
                 for (int k = 0; k < n; k++) fx->setParameter(fx, sweep_all ? k : (int)(frand() * np) % np, frand());
             }
         }
-        if (mode == 4) fx->setParameter(fx,23,.02f+.8f*frand());
+        if (mode == 4 && sweep_param >= 0) fx->setParameter(fx, sweep_param, .02f + .8f * frand());
         fx->processReplacing(fx, ins, outs, BLOCK);
         t[b] = now_us(CLOCK_THREAD_CPUTIME_ID) - t0;
         for (int i = 0; i < BLOCK; i++) {
@@ -204,20 +210,20 @@ int main(int argc, char **argv) {
 
 #ifdef SIREN_PROFILES
     if (profiles) {
-        const char *names[]={"basic dry","filter sweep","heavy echo","freeze","reverb full","all modulation"};
-        const int preset[]={0,4,10,9,5,11};
+        const char *names[]={"basic dry","filter sweep","heavy echo","ping pong","zap","all modulation"};
+        const int preset[]={0,4,10,5,1,11};
+        sweep_param = param("cutoff");
         for (int j=0;j<6;++j) {
-            fx->setParameter(fx,44,1); fx->setParameter(fx,2,preset[j]/11.f);
-            if(j==0){fx->setParameter(fx,27,0);fx->setParameter(fx,32,0);}
-            if(j==1){fx->setParameter(fx,23,.04f);fx->setParameter(fx,24,1);}
-            if(j==3)fx->setParameter(fx,36,1);
-            if(j==4)fx->setParameter(fx,32,1);
-            if(j==5){fx->setParameter(fx,14,1);fx->setParameter(fx,16,1);fx->setParameter(fx,18,1);fx->setParameter(fx,34,1);fx->setParameter(fx,37,1);}
+            fx->setParameter(fx,param("stop"),1); fx->setParameter(fx,param("preset"),option("preset",preset[j]));
+            if(j==0)fx->setParameter(fx,param("delay_mix"),0);
+            if(j==1){fx->setParameter(fx,param("cutoff"),.04f);fx->setParameter(fx,param("resonance"),1);}
+            if(j==3)fx->setParameter(fx,param("ping"),1);
+            if(j==5){fx->setParameter(fx,param("rate"),1);fx->setParameter(fx,param("depth"),1);fx->setParameter(fx,param("feedback"),1);}
             st[ns++]=run(names[j],j==1?4:1,1,secs);
         }
         for(int j=0;j<12;++j){
             static char patchNames[12][24]; snprintf(patchNames[j],24,"preset %02d",j);
-            fx->setParameter(fx,44,1);fx->setParameter(fx,2,j/11.f);
+            fx->setParameter(fx,param("stop"),1);fx->setParameter(fx,param("preset"),option("preset",j));
             st[ns++]=run(patchNames[j],1,1,secs);
         }
     }

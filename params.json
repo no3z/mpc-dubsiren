@@ -1,50 +1,12 @@
 [
   {
-    "key": "fire",
-    "name": "FIRE",
-    "min": 0,
-    "max": 1,
-    "default": 0,
-    "unit": "",
-    "momentary": true,
-    "hold_ms": 250
-  },
-  {
-    "key": "latch",
-    "name": "LATCH",
-    "options": [
-      "OFF",
-      "ON"
-    ],
-    "default": 0
-  },
-  {
-    "key": "preset",
-    "name": "PRESET",
-    "options": [
-      "Air Raid",
-      "Laser",
-      "Fog Horn",
-      "Police",
-      "UFO",
-      "Space Echo",
-      "Smoke",
-      "Clash",
-      "Heavy Dub",
-      "Deep Orbit",
-      "Feedback Madness",
-      "Sci-Fi Alarm"
-    ],
-    "default": 0
-  },
-  {
-    "key": "mode",
-    "name": "MODE",
-    "options": [
-      "SIREN",
-      "ZAP"
-    ],
-    "default": 0
+    "key": "pitch",
+    "name": "PITCH",
+    "min": 10,
+    "max": 2400,
+    "default": 620,
+    "unit": "Hz",
+    "scale": "log"
   },
   {
     "key": "wave",
@@ -56,50 +18,7 @@
       "SQUARE",
       "NOISE"
     ],
-    "default": 3,
-    "values": [
-      3,
-      2,
-      1,
-      0,
-      4
-    ]
-  },
-  {
-    "key": "pitch",
-    "name": "PITCH",
-    "min": 10,
-    "max": 2400,
-    "default": 620,
-    "unit": "Hz",
-    "scale": "log"
-  },
-  {
-    "key": "level",
-    "name": "SIREN LEVEL",
-    "min": 0,
-    "max": 100,
-    "default": 70,
-    "unit": "%"
-  },
-  {
-    "key": "noise",
-    "name": "NOISE MIX",
-    "min": 0,
-    "max": 100,
-    "default": 0,
-    "unit": "%"
-  },
-  {
-    "key": "lfo_wave",
-    "name": "LFO WAVE",
-    "options": [
-      "TRIANGLE",
-      "SQUARE",
-      "SAW",
-      "SINE"
-    ],
-    "default": 0
+    "default": 3
   },
   {
     "key": "rate",
@@ -113,9 +32,28 @@
     "key": "depth",
     "name": "LFO DEPTH",
     "min": 0,
-    "max": 1400,
-    "default": 480,
-    "unit": "Hz"
+    "max": 100,
+    "default": 77.4,
+    "unit": "%"
+  },
+  {
+    "key": "lfo_wave",
+    "name": "LFO SHAPE",
+    "options": [
+      "TRIANGLE",
+      "SQUARE",
+      "SAW",
+      "SINE"
+    ],
+    "default": 0
+  },
+  {
+    "key": "zap_sweep",
+    "name": "ZAP SWEEP",
+    "min": -48,
+    "max": 48,
+    "default": -24,
+    "unit": "st"
   },
   {
     "key": "attack",
@@ -132,88 +70,6 @@
     "max": 3,
     "default": 0.05,
     "unit": "s"
-  },
-  {
-    "key": "lfo2_rate",
-    "name": "LFO2 RATE",
-    "min": 0.03,
-    "max": 8,
-    "default": 0.17,
-    "unit": "Hz"
-  },
-  {
-    "key": "lfo2_amount",
-    "name": "LFO2 TO RATE",
-    "min": 0,
-    "max": 100,
-    "default": 0,
-    "unit": "%"
-  },
-  {
-    "key": "lfo3_rate",
-    "name": "LFO3 RATE",
-    "min": 0.03,
-    "max": 8,
-    "default": 0.11,
-    "unit": "Hz"
-  },
-  {
-    "key": "lfo3_amount",
-    "name": "LFO3 TO DEPTH",
-    "min": 0,
-    "max": 100,
-    "default": 0,
-    "unit": "%"
-  },
-  {
-    "key": "chop_rate",
-    "name": "CHOP RATE",
-    "min": 0.25,
-    "max": 32,
-    "default": 4,
-    "unit": "Hz"
-  },
-  {
-    "key": "chop_amount",
-    "name": "CHOP DEPTH",
-    "min": 0,
-    "max": 100,
-    "default": 0,
-    "unit": "%"
-  },
-  {
-    "key": "zap_sweep",
-    "name": "ZAP SWEEP",
-    "min": -48,
-    "max": 48,
-    "default": -24,
-    "unit": "st"
-  },
-  {
-    "key": "zap_time",
-    "name": "ZAP TIME",
-    "min": 0.04,
-    "max": 1.2,
-    "default": 0.18,
-    "unit": "s"
-  },
-  {
-    "key": "repeat",
-    "name": "ZAP REPEAT",
-    "min": 0,
-    "max": 16,
-    "default": 0,
-    "unit": "Hz"
-  },
-  {
-    "key": "filter_type",
-    "name": "FILTER",
-    "options": [
-      "LP",
-      "BP",
-      "HP"
-    ],
-    "default": 0
   },
   {
     "key": "cutoff",
@@ -256,22 +112,6 @@
     "unit": "%"
   },
   {
-    "key": "delay_hp",
-    "name": "ECHO HP",
-    "min": 40,
-    "max": 1200,
-    "default": 120,
-    "unit": "Hz"
-  },
-  {
-    "key": "delay_lp",
-    "name": "ECHO LP",
-    "min": 800,
-    "max": 12000,
-    "default": 7600,
-    "unit": "Hz"
-  },
-  {
     "key": "ping",
     "name": "PING PONG",
     "min": 0,
@@ -280,24 +120,23 @@
     "unit": "%"
   },
   {
-    "key": "character",
-    "name": "ECHO TYPE",
+    "key": "preset",
+    "name": "PRESET",
     "options": [
-      "CLEAN",
-      "DESK",
-      "SMOKE",
-      "ORBIT",
-      "CLASH"
+      "Air Raid",
+      "Laser",
+      "Fog Horn",
+      "Police",
+      "UFO",
+      "Space Echo",
+      "Smoke",
+      "Clash",
+      "Heavy Dub",
+      "Deep Orbit",
+      "Feedback Madness",
+      "Sci-Fi Alarm"
     ],
     "default": 0
-  },
-  {
-    "key": "reverb",
-    "name": "REVERB",
-    "min": 0,
-    "max": 100,
-    "default": 16,
-    "unit": "%"
   },
   {
     "key": "output",
@@ -308,8 +147,18 @@
     "unit": "%"
   },
   {
-    "key": "crush",
-    "name": "8 BIT",
+    "key": "fire",
+    "name": "FIRE",
+    "min": 0,
+    "max": 1,
+    "default": 0,
+    "unit": "",
+    "momentary": true,
+    "hold_ms": 250
+  },
+  {
+    "key": "latch",
+    "name": "LATCH",
     "options": [
       "OFF",
       "ON"
@@ -317,83 +166,11 @@
     "default": 0
   },
   {
-    "key": "invert",
-    "name": "INVERT",
+    "key": "mode",
+    "name": "MODE",
     "options": [
-      "OFF",
-      "ON"
-    ],
-    "default": 0
-  },
-  {
-    "key": "freeze",
-    "name": "FREEZE",
-    "options": [
-      "OFF",
-      "ON"
-    ],
-    "default": 0
-  },
-  {
-    "key": "bend",
-    "name": "BEND",
-    "options": [
-      "OFF",
-      "ON"
-    ],
-    "default": 0
-  },
-  {
-    "key": "fast",
-    "name": "FAST",
-    "options": [
-      "OFF",
-      "ON"
-    ],
-    "default": 0
-  },
-  {
-    "key": "slow",
-    "name": "SLOW",
-    "options": [
-      "OFF",
-      "ON"
-    ],
-    "default": 0
-  },
-  {
-    "key": "oct_up",
-    "name": "OCT UP",
-    "options": [
-      "OFF",
-      "ON"
-    ],
-    "default": 0
-  },
-  {
-    "key": "oct_down",
-    "name": "OCT DOWN",
-    "options": [
-      "OFF",
-      "ON"
-    ],
-    "default": 0
-  },
-  {
-    "key": "kill",
-    "name": "KILL",
-    "options": [
-      "OFF",
-      "ON"
-    ],
-    "default": 0
-  },
-  {
-    "key": "filter_hold",
-    "name": "FILTER FX",
-    "options": [
-      "OFF",
-      "ON"
+      "SIREN",
+      "ZAP"
     ],
     "default": 0
   },
@@ -405,53 +182,5 @@
     "default": 0,
     "unit": "",
     "momentary": true
-  },
-  {
-    "key": "osc_low",
-    "name": "OSC LOW",
-    "min": -24,
-    "max": 12,
-    "default": 0,
-    "unit": "dB"
-  },
-  {
-    "key": "osc_mid",
-    "name": "OSC MID",
-    "min": -24,
-    "max": 12,
-    "default": 0,
-    "unit": "dB"
-  },
-  {
-    "key": "osc_high",
-    "name": "OSC HIGH",
-    "min": -24,
-    "max": 12,
-    "default": 0,
-    "unit": "dB"
-  },
-  {
-    "key": "master_low",
-    "name": "MASTER LOW",
-    "min": -24,
-    "max": 12,
-    "default": 0,
-    "unit": "dB"
-  },
-  {
-    "key": "master_mid",
-    "name": "MASTER MID",
-    "min": -24,
-    "max": 12,
-    "default": 0,
-    "unit": "dB"
-  },
-  {
-    "key": "master_high",
-    "name": "MASTER HIGH",
-    "min": -24,
-    "max": 12,
-    "default": 0,
-    "unit": "dB"
   }
 ]

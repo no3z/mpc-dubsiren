@@ -1,113 +1,208 @@
 #include "siren.h"
 #include "dsp_core.h"
 #include "effects.h"
-#include "fast_trig.h"
 #include "params.h"
 #include <atomic>
 #include <array>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 namespace dub {
 static_assert(std::atomic<float>::is_always_lock_free,"Realtime controls require lock-free float atomics");
 static_assert(std::atomic<uint32_t>::is_always_lock_free,"Realtime gates require lock-free word atomics");
 namespace {
 float initial(int i) noexcept{return PHYSICAL_DEFAULTS[i];}
 float validate(int i,float v) noexcept{return PARAMS[i].nopts ? float(int(bound(v,0,float(PARAMS[i].nopts-1))+.5f)) : bound(v,PARAMS[i].min,PARAMS[i].max);}
-constexpr int holds[]={P_latch,P_freeze,P_bend,P_fast,P_slow,P_oct_up,P_oct_down,P_kill,P_filter_hold};
+constexpr float ZapTime=.18f;   // fixed ZAP sweep time (BARZINE default)
+constexpr float Level=.7f;      // siren level into the master compressor
+constexpr float Glide=.002265f; // ~10 ms per-sample pitch and wave smoothing
+enum Wave {Sine,Triangle,Saw,Square,Noise};
 // Echo controls have their own ramps in Effects; do not smooth them twice.
-constexpr int smoothControls[]={P_pitch,P_level,P_noise,P_rate,P_depth,P_attack,P_release,
- P_lfo2_rate,P_lfo2_amount,P_lfo3_rate,P_lfo3_amount,P_chop_rate,P_chop_amount,
- P_zap_sweep,P_zap_time,P_repeat,P_cutoff,P_resonance,P_output,
- P_osc_low,P_osc_mid,P_osc_high,P_master_low,P_master_mid,P_master_high};
-constexpr int discreteControls[]={P_latch,P_mode,P_wave,P_lfo_wave,P_filter_type,P_character,
- P_crush,P_invert,P_freeze,P_bend,P_fast,P_slow,P_oct_up,P_oct_down,P_kill,P_filter_hold};
+constexpr int smoothControls[]={P_pitch,P_rate,P_depth,P_zap_sweep,P_attack,P_release,P_cutoff,P_resonance,P_output};
+constexpr int discreteControls[]={P_wave,P_lfo_wave,P_latch,P_mode};
+// glide[j] = (1-Glide)^(j+1): closed form of the one-pole for sample j of a chunk.
+alignas(16) const std::array<float,Chunk> glide=[]{
+    std::array<float,Chunk> g{};double q=1;
+    for(int j=0;j<Chunk;++j){q*=1.0-Glide;g[j]=float(q);}
+    return g;
+}();
+const std::array<double,Chunk> glideExact=[]{
+    std::array<double,Chunk> g{};double q=1;
+    for(int j=0;j<Chunk;++j){q*=1.0-Glide;g[j]=q;}
+    return g;
+}();
 }
 struct Siren::Impl {
     std::atomic<float> p[P_Count];
     std::atomic<uint32_t> notes[4];
     std::atomic<uint32_t> noteTriggers{0},fireTriggers{0},stopTriggers{0},stopFire{0},stopNote{0};
     float c[P_Count],t[P_Count];
-    uint32_t noteSeen=0,fireSeen=0,stopSeen=0,rng=0xeca12345;
-    double phase=0,lfo=0,lfo2=0,lfo3=0,chop=0;
-    float env=0,basePitch=620,waveBlend[5]={1,0,0,0,0},killGain=1,bitMix=0;
-    float attackCoeff=.01,releaseCoeff=.01,noiseGain=0;
-    float cachedAttack=-1,cachedRelease=-1,cachedNoise=-1;
-    bool lastGate=false,zapActive=false;int lastMode=0,pulse=0;uint32_t tick=0;
-    double zapAge=0,repeatClock=0,zapFrequency=620,zapMultiplier=1;float zapStart=620,zapEnd=155,zapLength=.18,zapDecay=.18;
-    Biquad tone,oscEq[3],postL,postR,masterEqL[3],masterEqR[3];
-    Effects effects;EchoConfig fx;
-    float chopSmoothed=1;
-    float pitchTarget=620,rateBase=.55f,depthBase=480,rateAmount=0,depthAmount=0,repeatRate=0;
-    float lfo2Step=.17f/SampleRate,lfo3Step=.11f/SampleRate,chopStep=4.f/SampleRate;
-    float levelGain=.7f,outputGain=1;int selectedWave=0,settledWave=0,lfoShape=0;
-    void control() noexcept {
-        pitchTarget=bound(c[P_pitch]*(c[P_oct_up]>.5f?2.f:1.f)*(c[P_oct_down]>.5f?.5f:1.f)*(c[P_bend]>.5f?.5f:1.f),1,8000);
-        const float speed=(c[P_fast]>.5f?4.f:1.f)*(c[P_slow]>.5f?.25f:1.f);
-        rateBase=c[P_rate]*speed;depthBase=c[P_depth];rateAmount=.009f*c[P_lfo2_amount];depthAmount=.01f*c[P_lfo3_amount];
-        repeatRate=c[P_repeat]*speed;
-        if(c[P_repeat]<=0&&(c[P_fast]>.5f)!=(c[P_slow]>.5f))repeatRate=c[P_fast]>.5f?8.f:2.f;
-        lfo2Step=c[P_lfo2_rate]/SampleRate;lfo3Step=c[P_lfo3_rate]/SampleRate;chopStep=c[P_chop_rate]/SampleRate;
-        levelGain=c[P_level]*.01f;outputGain=c[P_output]*.01f;lfoShape=int(c[P_lfo_wave]);
-        fx.character=int(c[P_character]);fx.invert=c[P_invert]>.5f;fx.freeze=c[P_freeze]>.5f;fx.bend=c[P_bend]>.5f;
+    uint32_t noteSeen=0,fireSeen=0,stopSeen=0,tick=0;
+    alignas(16) uint32_t rng[4]={0xeca12345u,0x9e3779b9u,0x7f4a7c15u,0x2545f491u};
+    double phase=0,lfo=0,basePitch=620;
+    float env=0,waveBlend[5]={};
+    float attackCoeff=.01f,releaseCoeff=.01f,cachedAttack=-1,cachedRelease=-1;
+    bool lastGate=false,zapActive=false;int lastMode=0,pulse=0;
+    int selectedWave=Square,settledWave=Square,lfoShape=0;
+    float pitchTarget=620,outputGain=1;
+    // ZAP: exponential f0 -> f0*2^(sweep/12) over ZapTime, then hold.
+    double zapAge=0,zapFrequency=620;float zapEnd=155,zapDecay=ZapTime;
+    double zapSteps[Chunk+1]={};
+    Lowpass tone;Effects effects;EchoConfig fx;
+    Compressor comp{-24,30,12,.25f},limiter{-1,0,20,.08f};
+
+    Impl(){
+        for(int i=0;i<P_Count;++i){c[i]=t[i]=initial(i);p[i].store(c[i]);}
+        for(auto& n:notes)n.store(0);
+        selectedWave=settledWave=int(c[P_wave]);waveBlend[selectedWave]=1;
+        basePitch=pitchTarget=c[P_pitch];
+        coefficients();
+    }
+    void control() noexcept{
+        pitchTarget=bound(c[P_pitch],1,8000);
+        outputGain=c[P_output]*.01f;lfoShape=int(c[P_lfo_wave]);
         if(selectedWave!=int(c[P_wave])){selectedWave=int(c[P_wave]);settledWave=-1;}
     }
-    Compressor comp,limiter;
-    Impl(){for(int i=0;i<P_Count;++i){c[i]=t[i]=initial(i);p[i].store(c[i]);}for(auto& n:notes)n.store(0);}
-    float noise() noexcept{rng^=rng<<13;rng^=rng>>17;rng^=rng<<5;return float(rng>>8)*(1.f/8388608.f)-1;}
+    void coefficients() noexcept{
+        tone.scrub();
+        if(c[P_attack]!=cachedAttack){cachedAttack=c[P_attack];attackCoeff=1-std::exp(-1/(Fs*std::max(.001f,c[P_attack]/4.6f)));}
+        if(c[P_release]!=cachedRelease){cachedRelease=c[P_release];releaseCoeff=1-std::exp(-1/(Fs*std::max(.003f,c[P_release]/4.6f)));}
+        tone.set(c[P_cutoff],c[P_resonance]);
+    }
     bool noteGate() const noexcept{for(const auto& n:notes)if(n.load(std::memory_order_relaxed))return true;return false;}
     void startZap(float pitch) noexcept{
-        zapActive=true;zapAge=0;zapStart=pitch;zapEnd=std::max(1.f,pitch*std::pow(2.f,c[P_zap_sweep]/12));
-        zapLength=c[P_zap_time];zapDecay=std::max(c[P_attack],zapLength);
-        zapFrequency=zapStart;zapMultiplier=std::exp(std::log(double(zapEnd)/zapStart)/(double(zapLength)*SampleRate));
+        zapActive=true;zapAge=0;zapFrequency=pitch;
+        zapEnd=std::max(1.f,pitch*std::pow(2.f,c[P_zap_sweep]/12));zapDecay=std::max(c[P_attack],ZapTime);
+        const double m=std::exp(std::log(double(zapEnd)/pitch)/(double(ZapTime)*Fs));
+        double q=1;for(int j=0;j<=Chunk;++j){zapSteps[j]=q;q*=m;}
     }
     void reset() noexcept{
-        phase=lfo=lfo2=lfo3=chop=0;env=0;pulse=0;zapActive=lastGate=false;repeatClock=0;
-        tick=0;chopSmoothed=1;effects.reset();tone.reset();postL.reset();postR.reset();for(auto& q:oscEq)q.reset();for(auto& q:masterEqL)q.reset();for(auto& q:masterEqR)q.reset();
-        comp.gain=limiter.gain=1;
-    }
-    void coefficients() noexcept{
-        tone.scrub();postL.scrub();postR.scrub();
-        for(auto& q:oscEq)q.scrub();
-        for(auto& q:masterEqL)q.scrub();
-        for(auto& q:masterEqR)q.scrub();
-        if(c[P_attack]!=cachedAttack){cachedAttack=c[P_attack];attackCoeff=1-std::exp(-1/(SampleRate*std::max(.001f,c[P_attack]/4.6f)));}
-        if(c[P_release]!=cachedRelease){cachedRelease=c[P_release];releaseCoeff=1-std::exp(-1/(SampleRate*std::max(.003f,c[P_release]/4.6f)));}
-        tone.tone(int(c[P_filter_type]),c[P_cutoff],c[P_resonance]);
-        postL.tone(0,c[P_filter_hold]>.5f ? bound(c[P_cutoff]*.12f,140,420) : 20000,c[P_filter_hold]>.5f ? std::max(10.f,c[P_resonance]) : .7f);
-        postR.coefficientsFrom(postL);
-        const float hz[3]={120,1000,6000};for(int j=0;j<3;++j){oscEq[j].eq(j,hz[j],c[P_osc_low+j]);masterEqL[j].eq(j,hz[j],c[P_master_low+j]);masterEqR[j].coefficientsFrom(masterEqL[j]);}
-        if(c[P_noise]!=cachedNoise){cachedNoise=c[P_noise];noiseGain=std::pow(c[P_noise]*.01f,1.7f)*.24f;}
-    }
-    void character(int index) noexcept{
-        const float values[5][6]={
-            {60.f/72*.5f,42,16,120,7600,0},
-            {.18f,54,8,180,2600,0},
-            {.42f,66,32,70,1750,10},
-            {60.f/72*.75f,70,44,220,5200,90},
-            {60.f/72*.5f,80,12,260,3400,12}
-        };
-        const int ids[6]={P_delay_time,P_feedback,P_reverb,P_delay_hp,P_delay_lp,P_ping};
-        for(int j=0;j<6;++j)p[ids[j]].store(values[index][j],std::memory_order_relaxed);
+        phase=lfo=0;env=0;pulse=0;zapActive=lastGate=false;tick=0;
+        effects.reset();tone.reset();comp.reset();limiter.reset();
     }
     void preset(int index) noexcept{
-        // Full native snapshots: performance holds do not become saved factory patch state.
+        // Complete snapshots: a preset change also releases LATCH.
         for(int i=0;i<P_Count;++i)if(i!=P_preset && i!=P_fire && i!=P_stop)p[i].store(initial(i),std::memory_order_relaxed);
         const auto set=[this](int i,float v){p[i].store(validate(i,v),std::memory_order_relaxed);};
         switch(index){
-        case 1:set(P_mode,1);set(P_wave,1);set(P_pitch,2100);set(P_zap_sweep,-40);set(P_zap_time,.5);set(P_cutoff,7000);set(P_resonance,4);break;
-        case 2:set(P_pitch,110);set(P_rate,.25);set(P_depth,40);set(P_cutoff,900);set(P_resonance,1);set(P_character,2);character(2);break;
-        case 3:set(P_pitch,700);set(P_rate,2);set(P_depth,350);set(P_lfo_wave,1);set(P_cutoff,4500);break;
-        case 4:set(P_wave,3);set(P_pitch,900);set(P_rate,3.2);set(P_depth,700);set(P_lfo_wave,3);set(P_cutoff,6000);set(P_resonance,3);break;
-        case 5:set(P_wave,2);set(P_pitch,420);set(P_rate,.7);set(P_depth,280);set(P_character,3);character(3);set(P_reverb,60);break;
-        case 6:set(P_character,2);character(2);set(P_pitch,340);set(P_rate,6.5);set(P_depth,180);set(P_lfo_wave,1);set(P_cutoff,3200);break;
-        case 7:set(P_character,4);character(4);set(P_mode,1);set(P_pitch,1400);set(P_zap_sweep,-26);set(P_zap_time,.16);set(P_repeat,7);break;
-        case 8:set(P_pitch,180);set(P_rate,.35);set(P_depth,100);set(P_cutoff,1200);set(P_character,1);character(1);set(P_feedback,78);break;
-        case 9:set(P_wave,3);set(P_pitch,280);set(P_rate,.45);set(P_depth,160);set(P_lfo2_amount,80);set(P_lfo3_amount,65);set(P_character,3);character(3);break;
-        case 10:set(P_pitch,620);set(P_character,4);character(4);set(P_feedback,88);set(P_delay_time,.09);set(P_delay_mix,95);set(P_level,45);set(P_output,70);break;
-        case 11:set(P_wave,1);set(P_pitch,1100);set(P_rate,12);set(P_depth,600);set(P_lfo2_amount,90);set(P_lfo3_amount,80);set(P_chop_amount,55);set(P_character,3);character(3);break;
+        case 1:set(P_mode,1);set(P_wave,Saw);set(P_pitch,2100);set(P_zap_sweep,-40);set(P_cutoff,7000);set(P_resonance,4);break;
+        case 2:set(P_pitch,110);set(P_rate,.25);set(P_depth,36.4);set(P_cutoff,900);set(P_resonance,1);set(P_delay_time,.42);set(P_feedback,66);set(P_ping,10);break;
+        case 3:set(P_pitch,700);set(P_rate,2);set(P_depth,50);set(P_lfo_wave,1);set(P_cutoff,4500);break;
+        case 4:set(P_wave,Sine);set(P_pitch,900);set(P_rate,3.2);set(P_depth,77.8);set(P_lfo_wave,3);set(P_cutoff,6000);set(P_resonance,3);break;
+        case 5:set(P_wave,Triangle);set(P_pitch,420);set(P_rate,.7);set(P_depth,66.7);set(P_delay_time,.625);set(P_feedback,70);set(P_ping,90);break;
+        case 6:set(P_pitch,340);set(P_rate,6.5);set(P_depth,52.9);set(P_lfo_wave,1);set(P_cutoff,3200);set(P_delay_time,.42);set(P_feedback,66);set(P_ping,10);break;
+        case 7:set(P_mode,1);set(P_pitch,1400);set(P_zap_sweep,-26);set(P_feedback,80);set(P_ping,12);break;
+        case 8:set(P_pitch,180);set(P_rate,.35);set(P_depth,55.6);set(P_cutoff,1200);set(P_delay_time,.18);set(P_feedback,78);break;
+        case 9:set(P_wave,Sine);set(P_pitch,280);set(P_rate,.45);set(P_depth,57.1);set(P_delay_time,.625);set(P_feedback,70);set(P_ping,90);break;
+        case 10:set(P_feedback,88);set(P_delay_time,.09);set(P_delay_mix,95);set(P_ping,12);set(P_output,70);break;
+        case 11:set(P_wave,Saw);set(P_pitch,1100);set(P_rate,12);set(P_depth,54.5);set(P_delay_time,.625);set(P_feedback,70);set(P_ping,90);break;
         default:break;
         }
+    }
+    // One chunk of n <= 16 samples inside a single control interval.
+    void chunk(float* left,float* right,int n,bool retrigger,bool midiHeld) noexcept{
+        using namespace simd;
+        const int vectors=(n+3)/4,padded=4*vectors;
+        const int mode=int(c[P_mode]);
+        // Gates change on the control grid; a FIRE pulse ends at most 15 samples late.
+        const bool gate=midiHeld || c[P_latch]>.5f || pulse>0;
+        pulse=std::max(0,pulse-n);
+        if(mode && (retrigger || (gate && !lastGate) || (gate && mode!=lastMode)))startZap(pitchTarget);
+        if(!gate && lastGate)zapActive=false;
+        lastGate=gate;lastMode=mode;
+
+        alignas(16) float freq[Chunk],phases[Chunk],steps[Chunk],osc[Chunk],dry[Chunk],l[Chunk],r[Chunk];
+        // Pitch glide, then siren LFO FM or the ZAP sweep.
+        // The glide state is double so chunk boundaries do not round it.
+        const double offset=basePitch-pitchTarget;
+        for(int v=0;v<vectors;++v)store(freq+4*v,madd(splat(pitchTarget),splat(float(offset)),load(glide.data()+4*v)));
+        basePitch=std::fabs(offset)<1e-4 ? pitchTarget : pitchTarget+offset*glideExact[n-1];
+        const double lfoStep=double(c[P_rate])/Fs;
+        const bool zapping=mode && zapActive;
+        if(!mode){
+            // Depth is a fraction of the gliding pitch: f = pitch*(1 + depth*lfo).
+            // Lane phases come from the double phase, so any block split is identical.
+            alignas(16) float at[Chunk];
+            for(int j=0;j<padded;++j)at[j]=float(frac(lfo+j*lfoStep));
+            const vf depth=splat(c[P_depth]*.01f);
+            for(int v=0;v<vectors;++v){
+                const vf f=load(freq+4*v);
+                store(freq+4*v,madd(f,mul(f,depth),simd::lfo(lfoShape,load(at+4*v))));
+            }
+        }else if(zapping){
+            for(int j=0;j<padded;++j)freq[j]=zapAge+j/double(Fs)>=ZapTime ? zapEnd : float(zapFrequency*zapSteps[j]);
+            zapFrequency*=zapSteps[n];
+        }
+        lfo=frac(lfo+n*lfoStep);
+        // Oscillator phase stays double precision across chunks.
+        for(int j=0;j<n;++j){
+            const float f=bound(freq[j],-Fs*.4f,Fs*.4f);
+            phases[j]=float(phase);steps[j]=std::fabs(f)*(1/Fs);
+            phase=frac(phase+double(f)/Fs);
+        }
+        for(int j=n;j<padded;++j)phases[j]=steps[j]=0;
+        const double age=zapAge;
+        if(zapping)zapAge+=n/double(Fs);
+        const bool sounding=env!=0 || (mode ? zapping && age+1/double(Fs)<zapDecay : gate);
+        // Waveform: one band-limited shape once settled, a 10 ms blend after changes.
+        if(sounding){
+            if(settledWave>=0)render(settledWave,osc,phases,steps,vectors);
+            else{
+                alignas(16) float shape[Chunk];
+                std::fill_n(osc,padded,0.f);
+                for(int w=0;w<5;++w){
+                    const float to=w==selectedWave ? 1.f : 0.f,from=waveBlend[w];
+                    if(std::max(from,to+(from-to)*glide[n-1])<=1e-8f)continue;
+                    render(w,shape,phases,steps,vectors);
+                    for(int v=0;v<vectors;++v){
+                        const vf blend=madd(splat(to),splat(from-to),load(glide.data()+4*v));
+                        store(osc+4*v,madd(load(osc+4*v),blend,load(shape+4*v)));
+                    }
+                }
+            }
+        }
+        if(settledWave<0){
+            bool settled=true;
+            for(int w=0;w<5;++w){
+                const float to=w==selectedWave ? 1.f : 0.f,next=to+(waveBlend[w]-to)*glide[n-1];
+                if(std::fabs(next-to)<1e-7f)waveBlend[w]=to;else{waveBlend[w]=next;settled=false;}
+            }
+            if(settled)settledWave=selectedWave;
+        }
+        // Envelope and resonant lowpass are the serial part.
+        if(!sounding && tone.silent())std::fill_n(dry,padded,0.f);
+        else{
+            for(int j=0;j<n;++j){
+                const bool on=mode ? zapping && age+(j+1)/double(Fs)<zapDecay : gate;
+                env+=(on ? attackCoeff : releaseCoeff)*((on ? 1.f : 0.f)-env);
+                if(env<1e-9f && !on)env=0;
+                dry[j]=tone.process(sounding ? osc[j]*env : 0.f);
+            }
+            for(int j=n;j<padded;++j)dry[j]=0;
+            for(int v=0;v<vectors;++v)store(dry+4*v,guard(load(dry+4*v),32.f));
+        }
+        effects.process(dry,l,r,n,fx);
+        for(int v=0;v<vectors;++v){store(l+4*v,mul(load(l+4*v),splat(Level)));store(r+4*v,mul(load(r+4*v),splat(Level)));}
+        comp.process(l,r,n);limiter.process(l,r,n);
+        const vf gain=splat(outputGain);
+        for(int v=0;v<vectors;++v){
+            store(l+4*v,clamp(softBound(mul(guard(load(l+4*v),32.f),gain)),-.98f,.98f));
+            store(r+4*v,clamp(softBound(mul(guard(load(r+4*v),32.f),gain)),-.98f,.98f));
+        }
+        std::memcpy(left,l,n*sizeof(float));std::memcpy(right,r,n*sizeof(float));
+    }
+    void render(int wave,float* out,const float* phases,const float* steps,int vectors) noexcept{
+        using namespace simd;
+        if(wave==Noise){
+            vu x=uload(rng);
+            for(int v=0;v<vectors;++v){
+                x=uxor(x,ushl<13>(x));x=uxor(x,ushr<17>(x));x=uxor(x,ushl<5>(x));
+                store(out+4*v,sub(mul(to_float(ushr<8>(x)),splat(1.f/8388608.f)),splat(1.f)));
+            }
+            ustore(rng,x);return;
+        }
+        for(int v=0;v<vectors;++v)store(out+4*v,oscillator(wave,load(phases+4*v),load(steps+4*v)));
     }
 };
 Siren::Siren():impl(new Impl){}
@@ -117,9 +212,9 @@ void Siren::set(int i,float v)noexcept{
     if(i<0 || i>=P_Count || !std::isfinite(v))return;
     auto& s=*impl;v=validate(i,v);
     if(i==P_fire){if(v>.5f)s.fireTriggers.fetch_add(1,std::memory_order_relaxed);return;}
-    if(i==P_stop){if(v>.5f){s.stopFire.store(s.fireTriggers.load(std::memory_order_relaxed),std::memory_order_relaxed);s.stopNote.store(s.noteTriggers.load(std::memory_order_relaxed),std::memory_order_relaxed);for(auto h:holds)s.p[h].store(0,std::memory_order_relaxed);for(auto& n:s.notes)n.store(0,std::memory_order_relaxed);s.stopTriggers.fetch_add(1,std::memory_order_release);}return;}
+    if(i==P_stop){if(v>.5f){s.stopFire.store(s.fireTriggers.load(std::memory_order_relaxed),std::memory_order_relaxed);s.stopNote.store(s.noteTriggers.load(std::memory_order_relaxed),std::memory_order_relaxed);s.p[P_latch].store(0,std::memory_order_relaxed);for(auto& n:s.notes)n.store(0,std::memory_order_relaxed);s.stopTriggers.fetch_add(1,std::memory_order_release);}return;}
     s.p[i].store(v,std::memory_order_relaxed);
-    if(i==P_preset)s.preset(int(v));else if(i==P_character)s.character(int(v));
+    if(i==P_preset)s.preset(int(v));
 }
 void Siren::restore(const float* values)noexcept{for(int i=0;i<P_Count;++i)if(std::isfinite(values[i]))impl->p[i].store(i==P_fire || i==P_stop ? 0 : validate(i,values[i]),std::memory_order_relaxed);}
 void Siren::midi(const unsigned char* msg,int len)noexcept{
@@ -137,78 +232,21 @@ void Siren::render(float* left,float* right,int frames)noexcept{
     const uint32_t fire=s.fireTriggers.load(std::memory_order_relaxed),notes=s.noteTriggers.load(std::memory_order_relaxed);
     const bool fireEvent=fire!=s.fireSeen;
     bool retrigger=fireEvent || notes!=s.noteSeen;s.fireSeen=fire;s.noteSeen=notes;
-    if(fireEvent)s.pulse=int(SampleRate*(s.t[P_mode]>.5f ? std::max(.25f,std::max(s.t[P_zap_time],s.t[P_attack])) : .25f));
+    if(fireEvent)s.pulse=int(Fs*(s.t[P_mode]>.5f ? std::max(.25f,std::max(ZapTime,s.t[P_attack])) : .25f));
     const bool midiHeld=s.noteGate();
-    auto& fx=s.fx;fx.time=s.t[P_delay_time];fx.feedback=s.t[P_feedback]*.01f;fx.mix=s.t[P_delay_mix]*.01f;
-    fx.hp=s.t[P_delay_hp];fx.lp=s.t[P_delay_lp];fx.ping=s.t[P_ping]*.01f;fx.reverb=s.t[P_reverb]*.01f;
-    for(int k=0;k<frames;++k){
-        if(s.tick++%16==0){
+    auto& fx=s.fx;fx.time=s.t[P_delay_time];fx.feedback=s.t[P_feedback]*.01f;fx.mix=s.t[P_delay_mix]*.01f;fx.ping=s.t[P_ping]*.01f;
+    for(int done=0;done<frames;){
+        if(s.tick%Chunk==0){
             for(auto i:discreteControls)s.c[i]=s.t[i];
             for(auto i:smoothControls){
                 const float next=s.c[i]+.0179784f*(s.t[i]-s.c[i]);
                 s.c[i]=(next==s.c[i] || std::fabs(next-s.t[i])<1e-8f) ? s.t[i] : next;
             }
-            s.control();
-            if((s.tick&31u)==1)s.coefficients();
+            s.control();s.coefficients();
         }
-        auto& c=s.c;const int mode=int(c[P_mode]);const bool gate=midiHeld || c[P_latch]>.5f || s.pulse>0;
-        const float pitch=s.pitchTarget;s.basePitch+=.002265f*(pitch-s.basePitch);
-        if(retrigger || (gate && !s.lastGate) || (gate && mode!=s.lastMode)){if(mode)s.startZap(pitch);s.repeatClock=0;}
-        if(!gate && s.lastGate){s.repeatClock=0;s.zapActive=false;}
-        if(s.pulse>0)--s.pulse;
-        const float repeat=s.repeatRate;
-        if(mode && gate && repeat>0){s.repeatClock+=repeat/SampleRate;if(s.repeatClock>=1){s.repeatClock-=1;s.startZap(pitch);}}
-        const float mainRate=s.rateAmount!=0 ? s.rateBase*(1+s.rateAmount*modulationSine(float(s.lfo2))) : s.rateBase;
-        const float mainDepth=s.depthAmount!=0 ? s.depthBase*(1+s.depthAmount*modulationSine(float(s.lfo3))) : s.depthBase;
-        float frequency=s.basePitch;
-        if(mode && s.zapActive){frequency=s.zapAge>=s.zapLength ? s.zapEnd : float(s.zapFrequency);s.zapFrequency*=s.zapMultiplier;s.zapAge+=1/SampleRate;}
-        else if(!mode)frequency+=mainDepth*lfoWave(s.lfo,s.lfoShape);
-        frequency=bound(frequency,-SampleRate*.4f,SampleRate*.4f);
-        const bool envOn=mode ? s.zapActive && s.zapAge<s.zapDecay : gate;
-        s.env+=(envOn ? s.attackCoeff : s.releaseCoeff)*((envOn ? 1.f : 0.f)-s.env);
-        if(s.env<1e-9f && !envOn)s.env=0;
-        const float white=s.noise(),dt=std::fabs(frequency)/SampleRate;
-        float input=0;
-        if(s.settledWave>=0){
-            if(s.env!=0)input=s.waveBlend[s.selectedWave]*(s.selectedWave==4?white:wave(s.phase,dt,s.selectedWave));
-        }else{
-            bool settled=true;
-            for(int w=0;w<5;++w){
-                const float previous=s.waveBlend[w];
-                s.waveBlend[w]+=.002265f*((s.selectedWave==w?1.f:0.f)-s.waveBlend[w]);
-                if(w==s.selectedWave){if(previous!=s.waveBlend[w])settled=false;}
-                else if(s.waveBlend[w]>1e-8f)settled=false;
-            }
-            if(s.env!=0){
-                // Square and saw share the same BLEP at the phase wrap; the
-                // triangle shares the half-cycle phase. Evaluate each once
-                // during a waveform transition, in the original summation order.
-                const double half=frac(s.phase+.5);
-                const float edge=(s.waveBlend[0]>1e-8f || s.waveBlend[1]>1e-8f) ? blep(s.phase,dt) : 0;
-                if(s.waveBlend[0]>1e-8f)input+=s.waveBlend[0]*((s.phase<.5?1.f:-1.f)+edge-blep(half,dt));
-                if(s.waveBlend[1]>1e-8f)input+=s.waveBlend[1]*(float(2*s.phase-1)-edge);
-                if(s.waveBlend[2]>1e-8f)input+=s.waveBlend[2]*(float(1-4*std::fabs(s.phase-.5))+float(4*dt)*(blamp(s.phase,dt)-blamp(half,dt)));
-                if(s.waveBlend[3]>1e-8f)input+=s.waveBlend[3]*float(std::sin(2*Pi*s.phase));
-                if(s.waveBlend[4]>1e-8f)input+=s.waveBlend[4]*white;
-            }
-            if(settled)s.settledWave=s.selectedWave;
-        }
-        input+=white*s.noiseGain*(1-s.waveBlend[4]);input*=s.env;
-        input=s.tone.process(input);for(auto& q:s.oscEq)input=q.process(input);
-        const float chopGain=1-c[P_chop_amount]*.005f+c[P_chop_amount]*.005f*(s.chop<.5 ? 1.f : -1.f);
-        s.chopSmoothed+=.027951f*(chopGain-s.chopSmoothed);
-        const float dry=safe(input*s.chopSmoothed);
-        fx.playing=gate;
-        float l=0,r=0;s.effects.process(dry,fx,l,r);l*=s.levelGain;r*=s.levelGain;
-        s.postL.processStereo(s.postR,l,r);s.comp.process(l,r,-24,30,12,.25f);
-        s.bitMix+=.00283046f*((c[P_crush]>.5f ? 1.f : 0.f)-s.bitMix);
-        const auto crush=[](float v){return std::fabs(v)<1e-8f ? 0.f : 2*std::floor(255*(bound(v,-1,1)+1)*.5f+.5f)/255-1;};
-        if(s.bitMix>1e-8f){l+=(crush(l)-l)*s.bitMix;r+=(crush(r)-r)*s.bitMix;}
-        s.killGain+=(c[P_kill]>.5f ? .003772f : .001259f)*((c[P_kill]>.5f ? 0.f : 1.f)-s.killGain);l*=s.killGain;r*=s.killGain;
-        for(int j=0;j<3;++j)s.masterEqL[j].processStereo(s.masterEqR[j],l,r);
-        s.limiter.process(l,r,-1,0,20,.08f);left[k]=bound(safe(l)*s.outputGain,-.98f,.98f);right[k]=bound(safe(r)*s.outputGain,-.98f,.98f);
-        s.phase=frac(s.phase+frequency/SampleRate);s.lfo=frac(s.lfo+mainRate/SampleRate);s.lfo2=frac(s.lfo2+s.lfo2Step);s.lfo3=frac(s.lfo3+s.lfo3Step);s.chop=frac(s.chop+s.chopStep);
-        s.lastGate=gate;s.lastMode=mode;retrigger=false;
+        const int n=std::min(frames-done,int(Chunk-s.tick%Chunk));
+        s.chunk(left+done,right+done,n,retrigger,midiHeld);
+        retrigger=false;done+=n;s.tick+=unsigned(n);
     }
 }
 }

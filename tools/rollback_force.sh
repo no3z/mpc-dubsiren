@@ -3,12 +3,13 @@
 # Copy this file, plugin_list.awk and the selected rollback manifest together.
 set -eu
 MODE=${1:---check}
-case "$MODE" in --check|--apply) ;; *) echo 'Usage: rollback_force.sh [--check|--apply] [1.0.0|1.0.1]' >&2; exit 2;; esac
+case "$MODE" in --check|--apply) ;; *) echo 'Usage: rollback_force.sh [--check|--apply] [1.0.0|1.0.1|1.0.2]' >&2; exit 2;; esac
 VERSION=${2:-1.0.0}
 case "$VERSION" in
     1.0.0) BACKUP_NAME=1.0.0-before-1.0.1 ;;
     1.0.1) BACKUP_NAME=1.0.1-before-1.0.2 ;;
-    *) echo 'Supported rollback versions: 1.0.0, 1.0.1' >&2; exit 2 ;;
+    1.0.2) BACKUP_NAME=1.0.2-before-2.0.0 ;;
+    *) echo 'Supported rollback versions: 1.0.0, 1.0.1, 1.0.2' >&2; exit 2 ;;
 esac
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 # Test harness prefix isolates every device path and disables service control.

@@ -1,173 +1,60 @@
-[
-  {
-    "assets_checked": 106,
-    "main_touch_regions": 55,
-    "utility_touch_regions": 10,
-    "parameters": 57,
-    "public_parameters_bound": 51,
-    "primary_qlinks": [
-      "pitch",
-      "wave",
-      "rate",
-      "depth",
-      "zap_sweep",
-      "cutoff",
-      "delay_time",
-      "feedback"
-    ],
-    "bounds_and_overlap_errors": [],
-    "minimum_primary_touch_size": {
-      "pitch": [
-        208,
-        112
-      ],
-      "rate": [
-        125,
-        148
-      ],
-      "depth": [
-        125,
-        148
-      ],
-      "cutoff": [
-        83,
-        160
-      ],
-      "resonance": [
-        87,
-        160
-      ],
-      "delay_time": [
-        132,
-        156
-      ],
-      "feedback": [
-        136,
-        156
-      ],
-      "reverb": [
-        176,
-        154
-      ],
-      "output": [
-        176,
-        154
-      ]
-    },
-    "iteration": 1
+{
+  "assets_checked": 56,
+  "touch_regions": 28,
+  "parameters": 21,
+  "qlinks": {
+    "bank 1 knob 1": "pitch",
+    "bank 1 knob 2": "wave",
+    "bank 1 knob 3": "rate",
+    "bank 1 knob 4": "depth",
+    "bank 1 knob 5": "lfo_wave",
+    "bank 1 knob 6": "zap_sweep",
+    "bank 1 knob 7": "attack",
+    "bank 1 knob 8": "release",
+    "bank 2 knob 1": "cutoff",
+    "bank 2 knob 2": "resonance",
+    "bank 2 knob 3": "delay_time",
+    "bank 2 knob 4": "feedback",
+    "bank 2 knob 5": "delay_mix",
+    "bank 2 knob 6": "ping",
+    "bank 2 knob 7": "preset",
+    "bank 2 knob 8": "output"
   },
-  {
-    "assets_checked": 106,
-    "main_touch_regions": 55,
-    "utility_touch_regions": 10,
-    "parameters": 57,
-    "public_parameters_bound": 51,
-    "primary_qlinks": [
-      "pitch",
-      "wave",
-      "rate",
-      "depth",
-      "zap_sweep",
-      "cutoff",
-      "delay_time",
-      "feedback"
-    ],
-    "bounds_and_overlap_errors": [],
-    "minimum_primary_touch_size": {
-      "pitch": [
-        208,
-        112
+  "groups": {
+    "SIREN": {
+      "OSC": [
+        "pitch",
+        "wave"
       ],
-      "rate": [
-        125,
-        148
+      "LFO": [
+        "rate",
+        "depth",
+        "lfo_wave"
       ],
-      "depth": [
-        125,
-        148
+      "ZAP": [
+        "zap_sweep"
       ],
-      "cutoff": [
-        83,
-        160
-      ],
-      "resonance": [
-        87,
-        160
-      ],
-      "delay_time": [
-        132,
-        156
-      ],
-      "feedback": [
-        136,
-        156
-      ],
-      "reverb": [
-        176,
-        154
-      ],
-      "output": [
-        176,
-        154
+      "ENVELOPE": [
+        "attack",
+        "release"
       ]
     },
-    "iteration": 2
+    "FX": {
+      "FILTER": [
+        "cutoff",
+        "resonance"
+      ],
+      "ECHO": [
+        "delay_time",
+        "feedback",
+        "delay_mix",
+        "ping"
+      ],
+      "MASTER": [
+        "preset",
+        "output"
+      ]
+    }
   },
-  {
-    "assets_checked": 106,
-    "main_touch_regions": 55,
-    "utility_touch_regions": 10,
-    "parameters": 57,
-    "public_parameters_bound": 51,
-    "primary_qlinks": [
-      "pitch",
-      "wave",
-      "rate",
-      "depth",
-      "zap_sweep",
-      "cutoff",
-      "delay_time",
-      "feedback"
-    ],
-    "bounds_and_overlap_errors": [],
-    "minimum_primary_touch_size": {
-      "pitch": [
-        208,
-        112
-      ],
-      "rate": [
-        125,
-        148
-      ],
-      "depth": [
-        125,
-        148
-      ],
-      "cutoff": [
-        83,
-        160
-      ],
-      "resonance": [
-        87,
-        160
-      ],
-      "delay_time": [
-        132,
-        156
-      ],
-      "feedback": [
-        136,
-        156
-      ],
-      "reverb": [
-        176,
-        154
-      ],
-      "output": [
-        176,
-        154
-      ]
-    },
-    "iteration": 3
-  }
-]
+  "errors": []
+}
