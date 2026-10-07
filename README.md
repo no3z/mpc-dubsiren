@@ -55,3 +55,6 @@ See [DSP](docs/DSP.md), [parameters](docs/PARAMETERS.md),
 Reports for 1.0.x ([performance](docs/PERFORMANCE_1.0.2.md),
 [RC audit](docs/RELEASE_CANDIDATE.md), [UI iterations](docs/UI_REDESIGN.md))
 describe the earlier engine and panel.
+
+Licensed under the MIT License (see [LICENSE](LICENSE)); third-party code keeps
+its own notices, listed in [NOTICE](NOTICE.md) and [VENDORED](VENDORED.md).
