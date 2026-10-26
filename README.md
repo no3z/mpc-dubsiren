@@ -8,8 +8,7 @@ Attribution and preserved notices are in [NOTICE.md](NOTICE.md) and [VENDORED.md
 Version 2.1.0 adds all twelve factory sounds to the Force's native **PRESET**
 selector in the top bar and fixes Q-Links on **Track Edit → Automation**.
 Parameter indices, UID and saved 2.0.0 projects stay compatible. Presets use only
-the native top-bar menu; Q-Link 15 is unassigned. This is a candidate pending
-device validation; see [2.1.0 installation and test steps](docs/RELEASE_2.1.0.md).
+the native top-bar menu; Q-Link 15 is unassigned. Tested on Akai Force software 3.9.1.2 on 2026-10-26; see [2.1.0 installation and test steps](docs/RELEASE_2.1.0.md).
 
 Version 2.0.0 introduced a simplified, NEON-optimized rewrite: one page, sixteen Q-Links
 grouped by function, and only the controls on those knobs plus FIRE, LATCH,

@@ -1,0 +1,38 @@
+name: Publish tested release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify and publish the committed package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          version="${RELEASE_TAG#v}"
+          archive="dist/Dub-Force-Siren-${version}-mpc-armv7.zip"
+          notes="docs/RELEASE_NOTES_${version}.md"
+          test -f "$notes"
+          sha256sum -c "$archive.sha256"
+          python3 vendor/mpc-vst-plugins/tools/catalog_check.py "$archive" --catalog
+          python3 - "$archive" "$version" <<'PY'
+          import json, sys, zipfile
+          with zipfile.ZipFile(sys.argv[1]) as archive:
+              manifest = json.loads(archive.read(next(p for p in archive.namelist() if p.endswith('/mpc-plugin.json'))))
+          assert manifest['version'] == sys.argv[2], 'Tag and package version differ'
+          PY
+          gh release create "$RELEASE_TAG" "$archive" "$archive.sha256" \
+            --verify-tag --title "Dub Force Siren ${version}" \
+            --notes-file "$notes" --latest

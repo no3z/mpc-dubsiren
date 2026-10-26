@@ -1,4 +1,4 @@
-# 2.1.0 candidate: Force installation and acceptance
+# 2.1.0: Force installation and acceptance
 
 Fixes issue [#1](https://github.com/no3z/mpc-dubsiren/issues/1) and adds the twelve
 factory sounds to the native PRESET menu in the top bar. The native menu selects the existing factory snapshots; the duplicate PATCH
@@ -25,7 +25,7 @@ at `/media/AKAI_SSD/Dub-Force-Siren-backups/2.1.0-before-enum-fix-20261026-13503
 The subsequent UI-only update was backed up at
 `2.1.0-before-remove-patch-20261026-135258/` in the same backup directory.
 The installer restarted `acvs`; installed payload hashes match the revised ZIP.
-This verifies deployment only: physical control and listening retests are pending.
+This verifies deployment only: the maintainer subsequently confirmed all functions work.
 
 ## Name and pitch range
 
@@ -69,8 +69,8 @@ unchanged. No custom rename behavior remains in the release installer.
 - Package payload is byte-identical to the tested release ARM binary. ZIP SHA-256:
   `bf12f387e66481c076e5cea5d89de94703c6692f27bfc4589c0f8e3d0da84059`.
 
-These are offline results; hardware menu appearance, physical Q-Links, listening
-and real-project CPU remain for the acceptance checklist below.
+The maintainer subsequently confirmed the hardware checklist below passes.
+No new hardware CPU benchmark was taken for 2.1.0.
 
 ## Install the candidate
 
