@@ -13,7 +13,7 @@ the native top-bar PRESET menu. Q-Link 15 is unassigned. Hidden parameter
 
 | Index | Key | Name | Q-Link | DSP destination | Range | Default |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 0 | `pitch` | PITCH | bank 1 knob 1 (OSC) | pitchTarget → glide → oscillator / ZAP start | 10…2400 Hz | 620 Hz |
+| 0 | `pitch` | PITCH | bank 1 knob 1 (OSC) | pitchTarget → glide → oscillator / ZAP start | 10…8000 Hz | 620 Hz |
 | 1 | `wave` | WAVE | bank 1 knob 2 (OSC) | selectedWave → band-limited oscillator / noise | SINE / TRIANGLE / SAW / SQUARE / NOISE | SQUARE |
 | 2 | `rate` | LFO RATE | bank 1 knob 3 (LFO) | LFO phase increment | 0.05…24 Hz | 0.55 Hz |
 | 3 | `depth` | LFO DEPTH | bank 1 knob 4 (LFO) | f = pitch·(1 + depth·LFO) | 0…100 % | 77.4 % |

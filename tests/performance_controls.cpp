@@ -63,6 +63,9 @@ static void migrated(AEffect* a,const std::string& saved){
 static void nativePrograms(){
     AEffect* a=VSTPluginMain(host);AEffect* b=VSTPluginMain(host);
     require(a && b,"native program instances");if(!a||!b)return;
+    char product[32]{};a->dispatcher(a,45,0,0,product,0);
+    require(!std::strcmp(product,"Dub Sirens"),"renamed product name");
+    require(a->uniqueID==0x44625372,"rename preserves UID");
     require(a->numPrograms==12,"twelve programs in native PRESET menu");
     require(a->version==2100,"2.1.0 VST version");
     for(int i=0;i<12;++i){
@@ -126,13 +129,13 @@ static void mapping(){
     }
     const char* shapes[]={"TRIANGLE","SQUARE","SAW","SINE"};
     for(int i=0;i<4;++i){a->setParameter(a,dub::P_lfo_wave,i/3.f);name(a,dub::P_lfo_wave,shapes[i]);}
-    for(float hz:{10.f,20.f,30.f,40.f,50.f,60.f,80.f,100.f,150.f,620.f,2400.f}){
-        const float n=std::log(hz/10.f)/std::log(240.f);a->setParameter(a,dub::P_pitch,n);
+    for(float hz:{10.f,20.f,30.f,40.f,50.f,60.f,80.f,100.f,150.f,620.f,2400.f,4000.f,6000.f,8000.f}){
+        const float n=std::log(hz/10.f)/std::log(800.f);a->setParameter(a,dub::P_pitch,n);
         auto v=physical(chunk(a));require(std::fabs(v[dub::P_pitch]-hz)<hz*2e-6f,"log pitch physical mapping");
         require(std::fabs(a->getParameter(a,dub::P_pitch)-n)<2e-6f,"log pitch inverse mapping");
         char display[24]{};a->dispatcher(a,7,dub::P_pitch,0,display,0);require(std::fabs(std::atof(display)-hz)<.6f,"pitch displays Hz");
     }
-    a->setParameter(a,dub::P_pitch,std::log(20.f/10)/std::log(240.f));float start=physical(chunk(a))[dub::P_pitch];
+    a->setParameter(a,dub::P_pitch,std::log(20.f/10)/std::log(800.f));float start=physical(chunk(a))[dub::P_pitch];
     a->setParameter(a,dub::P_pitch,a->getParameter(a,dub::P_pitch)+.001f);
     require(physical(chunk(a))[dub::P_pitch]-start<.2f,"small encoder step near 20 Hz");
     require(a->dispatcher(a,27,dub::P_pitch,0,(void*)"20",0)==1,"native physical numeric editing");
@@ -229,7 +232,7 @@ static void simdAccuracy(){
 static void dry(dub::Siren& s){s.set(dub::P_wave,0);s.set(dub::P_depth,0);s.set(dub::P_delay_mix,0);s.set(dub::P_cutoff,9000);s.set(dub::P_resonance,0);s.set(dub::P_output,50);}
 static void lowPitch(){
     float l[128],r[128];
-    for(float hz:{10.f,20.f,30.f,50.f,100.f,620.f,2400.f}){
+    for(float hz:{10.f,20.f,30.f,50.f,100.f,620.f,2400.f,4000.f,6000.f,8000.f}){
         dub::Siren s;dry(s);s.set(dub::P_pitch,hz);s.set(dub::P_latch,1);for(int k=0;k<500;++k)s.render(l,r,128);
         int crossings=0;float previous=l[127];double peak=0;
         for(int k=0;k<44100*6/128;++k){s.render(l,r,128);for(int i=0;i<128;++i){if(previous<=0&&l[i]>0)++crossings;previous=l[i];peak=std::max(peak,double(std::fabs(l[i])));}}
@@ -237,7 +240,7 @@ static void lowPitch(){
     }
     // With the default 77% depth every PITCH value transposes the whole sweep:
     // the average frequency over whole LFO cycles follows the knob down to 10 Hz.
-    for(float hz:{10.f,15.f,20.f,30.f,40.f,60.f,80.f,120.f,160.f,320.f,620.f,1200.f,2400.f}){
+    for(float hz:{10.f,15.f,20.f,30.f,40.f,60.f,80.f,120.f,160.f,320.f,620.f,1200.f,2400.f,4000.f,6000.f,8000.f}){
         dub::Siren s;s.set(dub::P_wave,0);s.set(dub::P_delay_mix,0);s.set(dub::P_cutoff,9000);s.set(dub::P_rate,1);s.set(dub::P_pitch,hz);s.set(dub::P_latch,1);
         for(int k=0;k<44100/128*2;++k)s.render(l,r,128);
         int crossings=0;float previous=l[127];

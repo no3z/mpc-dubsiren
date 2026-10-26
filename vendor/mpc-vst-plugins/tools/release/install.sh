@@ -9,6 +9,7 @@
 set -e
 cd "$(dirname "$0")"
 NAME='@NAME@'; SO='@SO_NAME@'; SKIN='@SKIN@'; UID_HEX='@UID@'; LEGACY_SO='@LEGACY_SO@'; USER_DATA='@USER_DATA@'; EXTRAS='@EXTRAS@'
+PREVIOUS_SKIN='@PREVIOUS_SKIN@'
 SYNTHS=/sdcard/Synths; YES=0; DEFER=0
 die() { echo "error: $*" >&2; exit 1; }
 while [ $# -gt 0 ]; do
@@ -38,6 +39,13 @@ SETTINGS="${MPC_SETTINGS:-$(ls /media/az01-internal/Settings/*/MPC.settings 2>/d
 sha256sum -c SHA256SUMS >/dev/null 2>&1 || die "files damaged (SHA256SUMS mismatch): copy the folder again"
 mkdir -p "$SYNTHS" || die "cannot create $SYNTHS"
 grep -q "$SYNTHS" "$SETTINGS" || echo "warning: $SYNTHS isn't in MPC's SynthContentLocations; the skin may not show"
+
+# A renamed folder must belong to this exact plugin before we consider moving it.
+PREVIOUS="$SYNTHS/$PREVIOUS_SKIN"
+if [ -n "$PREVIOUS_SKIN" ] && [ "$PREVIOUS_SKIN" != "$SKIN" ] && [ -e "$PREVIOUS" ]; then
+    [ ! -L "$PREVIOUS" ] && [ -d "$PREVIOUS" ] || die "previous skin is not a real directory"
+    grep -Fq " uid=\"$UID_HEX\"" "$PREVIOUS/plugin-meta.xml" || die "previous skin has a different UID"
+fi
 
 echo "Installing $NAME @VERSION@:"
 echo "  $SYNTHS/$SKIN/ (skin, $SO and its data), and an entry in $SETTINGS"
@@ -122,6 +130,16 @@ if [ $LEGACY = 1 ] && [ "$LEGACY_SO" != "$FILE" ]; then
         case " $USER_DATA " in *" $e "*) continue ;; esac
         if [ -e "$OLDROOT/$e" ]; then rm -rf "$OLDROOT/$e" && echo "removed the old packaged data $(dirname "$LEGACY_SO")/$e"; fi
     done
+fi
+# Move the superseded folder outside Synths only after payload and registration
+# succeed. Keeping it in Synths would let a later scan rediscover the old name.
+if [ -n "$PREVIOUS_SKIN" ] && [ "$PREVIOUS_SKIN" != "$SKIN" ] && [ -d "$PREVIOUS" ]; then
+    ARCHIVES="$(dirname "$SYNTHS")/plugin-rename-backups"
+    ARCHIVE="$ARCHIVES/$PREVIOUS_SKIN-$(date +%Y%m%d-%H%M%S)-$$"
+    mkdir -p "$ARCHIVES"
+    cmp "portable/$SKIN/$SO" "$NEW/$SO" || die "new plugin binary did not copy correctly"
+    mv "$PREVIOUS" "$ARCHIVE"
+    echo "Archived previous name outside Synths: $ARCHIVE"
 fi
 sync
 

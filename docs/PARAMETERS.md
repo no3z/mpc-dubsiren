@@ -5,7 +5,7 @@ Indices 0–15 are the Q-Links in knob order. VST automation recorded with 1.0.x
 
 | Index | Key | Range / options | Default | Units | Q-Link |
 |---:|---|---|---|---|---|
-| 0 | `pitch` | 10 .. 2400 | 620 | Hz | bank 1, knob 1 |
+| 0 | `pitch` | 10 .. 8000 | 620 | Hz | bank 1, knob 1 |
 | 1 | `wave` | SINE, TRIANGLE, SAW, SQUARE, NOISE | 3 |  | bank 1, knob 2 |
 | 2 | `rate` | 0.05 .. 24 | 0.55 | Hz | bank 1, knob 3 |
 | 3 | `depth` | 0 .. 100 | 77.4 | % | bank 1, knob 4 |
@@ -26,4 +26,4 @@ Indices 0–15 are the Q-Links in knob order. VST automation recorded with 1.0.x
 | 18 | `mode` | SIREN, ZAP | 0 |  | touch |
 | 19 | `stop` | 0 .. 1 | 0 |  | touch |
 
-Pitch uses logarithmic 10–2400 Hz mapping; other continuous controls are linear. FIRE is a 250 ms tap trigger (or one complete ZAP); MIDI notes provide press/release and LATCH sustains. LFO DEPTH is a percentage of the current pitch: 100% sweeps between 0 Hz and twice the pitch. STOP clears LATCH, gates and echo tails. Presets are complete snapshots of every sound parameter. ZAP time is fixed at 180 ms.
+Pitch uses logarithmic 10–8000 Hz mapping; other continuous controls are linear. FIRE is a 250 ms tap trigger (or one complete ZAP); MIDI notes provide press/release and LATCH sustains. LFO DEPTH is a percentage of the current pitch: 100% sweeps between 0 Hz and twice the pitch. STOP clears LATCH, gates and echo tails. Presets are complete snapshots of every sound parameter. ZAP time is fixed at 180 ms.

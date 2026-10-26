@@ -6,5 +6,5 @@ dist/*
 !dist/Dub-Force-Siren-2.0.0-mpc-armv7.zip
 __pycache__/
 *.pyc
-!dist/Dub-Force-Siren-2.1.0-mpc-armv7.zip
-!dist/Dub-Force-Siren-2.1.0-mpc-armv7.zip.sha256
+!dist/Dub-Sirens-2.1.0-mpc-armv7.zip
+!dist/Dub-Sirens-2.1.0-mpc-armv7.zip.sha256

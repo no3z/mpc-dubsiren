@@ -25,3 +25,11 @@ retained. The vendored host test adds deferred refresh regressions;
 The revised 2.1.0 candidate also ports upstream's direction-aware enum `settle`
 behavior with atomic previous-host positions, reset when presets/state change.
 This fixes alternating WAVE/LFO selections during continuous host sweeps.
+
+The port's release tool/installer adds `--previous-skin` to archive the old
+Dub Force Siren folder outside Synths after successful rename registration.
+The old UID is checked before stopping MPC; the copied new binary is compared
+before archiving. `tests/installer_rename.py` checks migration, repeat installs,
+wrong-UID rejection and preservation of unrelated settings and user files.
+This intentional installer extension triggers the upstream catalog checker's
+modified-template warning and is submitted for maintainer review.

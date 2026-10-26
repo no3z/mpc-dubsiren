@@ -1,4 +1,4 @@
-# Dub Force Siren
+# Dub Sirens
 
 Native ARM VST2 dub siren for Akai Force/MPC OS. The engine ports BARZINE Siren
 Deck's siren and echo into C++, connected to sd88me's MPC wrapper, parameter
@@ -28,8 +28,9 @@ installing. The [1.0.2](dist/Dub-Force-Siren-1.0.2-mpc-armv7.zip),
 The top row of the screen is bank 1 and the bottom row bank 2, so each control
 sits above the knob that turns it. Five oscillator waves, four LFO shapes, an
 exponential ZAP, a resonant lowpass, a tape echo with filtered feedback and
-ping-pong, and a compressor/limiter. LFO Depth is a percentage of Pitch, so Pitch
-transposes the whole siren down to 10 Hz. Twelve factory presets.
+ping-pong, and a compressor/limiter. LFO Depth is a percentage of Pitch; the logarithmic PITCH range is 10–8000 Hz.
+At 100% depth the upper sweep reaches 16 kHz. Saved states retain physical Hz;
+existing normalized PITCH automation uses the expanded scale. Twelve factory presets.
 
 ```sh
 ./tools/build.sh host       # desktop Linux .so
