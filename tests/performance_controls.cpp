@@ -64,8 +64,8 @@ static void nativePrograms(){
     AEffect* a=VSTPluginMain(host);AEffect* b=VSTPluginMain(host);
     require(a && b,"native program instances");if(!a||!b)return;
     char product[32]{};a->dispatcher(a,45,0,0,product,0);
-    require(!std::strcmp(product,"Dub Sirens"),"renamed product name");
-    require(a->uniqueID==0x44625372,"rename preserves UID");
+    require(!std::strcmp(product,"Dub Force Siren"),"original product name");
+    require(a->uniqueID==0x44625372,"published UID preserved");
     require(a->numPrograms==12,"twelve programs in native PRESET menu");
     require(a->version==2100,"2.1.0 VST version");
     for(int i=0;i<12;++i){

@@ -162,7 +162,7 @@ class Skin:
         for y in range(H):
             c = 23 + int(5 * (1 - y / H))
             d.line((0, y, W, y), fill=(c, c + 1, c))
-        center(d, (16, 12, 220, 32), "DUB SIRENS", 24, AMBER, True)
+        center(d, (16, 12, 220, 32), "DUB FORCE", 24, AMBER, True)
         center(d, (16, 46, 220, 22), "SIREN  2.1", 13, DIM)
         number = 0
         for row, (bank, groups) in zip(ROWS, BANKS):
@@ -389,7 +389,7 @@ def main():
     build.mkdir(exist_ok=True)
     gen_vst.gen_params(cfg, plist, str(build / "params.h"))
     (build / "pluginlist-entry.xml").write_text(gen_vst.entry(cfg) + "\n")
-    folder = build / "skin" / "Dub Force - VST - Dub Sirens"
+    folder = build / "skin" / "Dub Force - VST - Dub Force Siren"
     if folder.exists():
         shutil.rmtree(folder)
     v = int(cfg.get("version", 1000))

@@ -29,7 +29,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 ap.add_argument("--so", required=True)
 ap.add_argument("--skin", required=True, help="the skin folder '<vendor> - VST - <name>'")
-ap.add_argument("--previous-skin", default="", help="previous folder name of this same UID, archived after a successful rename")
 ap.add_argument("--entry", required=True, help="pluginlist-entry.xml from the port's build")
 ap.add_argument("--version", required=True)
 ap.add_argument("--extra", action="append", default=[], help="SRC:DEST extra data, DEST relative to the plugin folder (e.g. bin:engine/bin); a leading vst/ is accepted for old scripts")
@@ -44,8 +43,6 @@ ap.add_argument("--user-data", action="append", default=[], metavar="REL",
 ap.add_argument("-o", "--out", default="dist")
 a = ap.parse_args()
 
-if a.previous_skin and (not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 ._-]*", a.previous_skin) or a.previous_skin in (".", "..")):
-    raise SystemExit("--previous-skin must be a plain folder name")
 entry = open(a.entry).read().strip()
 attr = dict(re.findall(r'(\w+)="([^"]*)"', entry))
 name, so_name = attr["name"], os.path.basename(attr["file"])
@@ -89,7 +86,7 @@ for d in a.user_data:
     if not re.fullmatch(r"[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*", d) or ".." in d.split("/"):
         raise SystemExit("--user-data must be a relative path of letters, digits, . _ - and / (no spaces or ..): %r" % d)
 legacy_so = "/sdcard/vst/" + so_name   # where the previous layout installed the .so (and its data, next to it)
-sub = {"@PREVIOUS_SKIN@": a.previous_skin, "@NAME@": name, "@SO_NAME@": so_name, "@SKIN@": skin_name,
+sub = {"@NAME@": name, "@SO_NAME@": so_name, "@SKIN@": skin_name,
        "@EXTRAS@": " ".join("'%s'" % e for e in extras), "@VERSION@": a.version,
        "@UID@": attr["uid"], "@LEGACY_SO@": legacy_so, "@USER_DATA@": " ".join(a.user_data)}
 for script in ("install.sh", "uninstall.sh"):

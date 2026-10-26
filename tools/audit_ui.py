@@ -29,7 +29,7 @@ dsp = {
 assert set(dsp) == set(index)
 for key in index:
     assert "P_" + key in siren, "no DSP use of " + key
-skin = ROOT / "build/skin/Dub Force - VST - Dub Sirens/Plugin Skins"
+skin = ROOT / "build/skin/Dub Force - VST - Dub Force Siren/Plugin Skins"
 tui = json.loads((skin / "TUI.json").read_text())["pageData"]
 defs = {d["key"]: d["value"] for d in tui["componentDefinitions"]["localComponentDefinitions"]}
 q = json.loads((skin / "Q-Links.json").read_text())

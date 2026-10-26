@@ -1,4 +1,4 @@
-# Dub Sirens
+# Dub Force Siren
 
 Native ARM VST2 dub siren for Akai Force/MPC OS. The engine ports BARZINE Siren
 Deck's siren and echo into C++, connected to sd88me's MPC wrapper, parameter
