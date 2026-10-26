@@ -21,3 +21,7 @@ parameter index locking from `tools/gen_vst.py`, and option-backed native VST
 programs. Local atomic safety, typed parameters, log mapping and popup ABI are
 retained. The vendored host test adds deferred refresh regressions;
 `test_port.sh` uses C++17 and passes the port's flags to the wrapper as well.
+
+The revised 2.1.0 candidate also ports upstream's direction-aware enum `settle`
+behavior with atomic previous-host positions, reset when presets/state change.
+This fixes alternating WAVE/LFO selections during continuous host sweeps.

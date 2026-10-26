@@ -103,6 +103,27 @@ static void mapping(){
     for(int i=1;i<5;++i){a->setParameter(a,dub::P_wave,a->getParameter(a,dub::P_wave)+.001f);require(a->getParameter(a,dub::P_wave)==i/4.f,"one clockwise wave step");name(a,dub::P_wave,waves[i]);}
     for(int i=3;i>=0;--i){a->setParameter(a,dub::P_wave,a->getParameter(a,dub::P_wave)-.001f);require(a->getParameter(a,dub::P_wave)==i/4.f,"one counterclockwise wave step");name(a,dub::P_wave,waves[i]);}
     for(int k=0;k<1000;++k){a->setParameter(a,dub::P_wave,k/999.f);float v=a->getParameter(a,dub::P_wave);require(v>=0&&v<=1&&v*4==std::round(v*4),"no ambiguous intermediate wave values");}
+    for(int param:{dub::P_wave,dub::P_lfo_wave}){
+        int steps=PARAMS[param].nopts-1;
+        a->setParameter(a,param,0);
+        float previous=0;
+        for(int k=1;k<=1000;++k){
+            float input=k/1000.f;a->setParameter(a,param,input);
+            float current=a->getParameter(a,param);
+            require(current>=previous,"increasing enum sweep never reverses");previous=current;
+            a->setParameter(a,param,input);
+            require(a->getParameter(a,param)==current,"repeated enum input does not toggle");
+        }
+        for(int k=999;k>=0;--k){
+            a->setParameter(a,param,k/1000.f);float current=a->getParameter(a,param);
+            require(current<=previous,"decreasing enum sweep never reverses");previous=current;
+        }
+        a->setParameter(a,param,0);
+        for(int k=1;k<=steps;++k){a->setParameter(a,param,a->getParameter(a,param)+1/128.f);
+            require(std::fabs(a->getParameter(a,param)-float(k)/steps)<1e-6,"Q-Link clockwise enum steps");}
+        for(int k=steps-1;k>=0;--k){a->setParameter(a,param,a->getParameter(a,param)-1/128.f);
+            require(std::fabs(a->getParameter(a,param)-float(k)/steps)<1e-6,"Q-Link reverse enum steps");}
+    }
     const char* shapes[]={"TRIANGLE","SQUARE","SAW","SINE"};
     for(int i=0;i<4;++i){a->setParameter(a,dub::P_lfo_wave,i/3.f);name(a,dub::P_lfo_wave,shapes[i]);}
     for(float hz:{10.f,20.f,30.f,40.f,50.f,60.f,80.f,100.f,150.f,620.f,2400.f}){

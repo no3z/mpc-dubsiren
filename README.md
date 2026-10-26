@@ -7,8 +7,7 @@ Attribution and preserved notices are in [NOTICE.md](NOTICE.md) and [VENDORED.md
 
 Version 2.1.0 adds all twelve factory sounds to the Force's native **PRESET**
 selector in the top bar and fixes Q-Links on **Track Edit → Automation**.
-Parameter indices, UID and saved 2.0.0 projects stay compatible. The existing
-PATCH control selects the same sounds. This is a candidate pending device
+Parameter indices, UID and saved 2.0.0 projects stay compatible. The touch PATCH control selects the same sounds; Q-Link 15 is unassigned. This is a candidate pending device
 validation; see [2.1.0 installation and test steps](docs/RELEASE_2.1.0.md).
 
 Version 2.0.0 introduced a simplified, NEON-optimized rewrite: one page, sixteen Q-Links
@@ -23,7 +22,7 @@ installing. The [1.0.2](dist/Dub-Force-Siren-1.0.2-mpc-armv7.zip),
 | Bank | Knobs |
 | --- | --- |
 | 1 · SIREN | 1 Pitch, 2 Wave (OSC) · 3 Rate, 4 Depth, 5 Shape (LFO) · 6 Sweep (ZAP) · 7 Attack, 8 Release (ENVELOPE) |
-| 2 · FX | 9 Cutoff, 10 Resonance (FILTER) · 11 Time, 12 Feedback, 13 Mix, 14 Ping Pong (ECHO) · 15 Patch, 16 Output (MASTER) |
+| 2 · FX | 9 Cutoff, 10 Resonance (FILTER) · 11 Time, 12 Feedback, 13 Mix, 14 Ping Pong (ECHO) · 15 Unassigned, 16 Output (MASTER) |
 
 The top row of the screen is bank 1 and the bottom row bank 2, so each control
 sits above the knob that turns it. Five oscillator waves, four LFO shapes, an

@@ -11,6 +11,19 @@ close the issue or add a `tested.json` hardware claim until the checklist passes
 Requires a modded Force with root access and a 44.1 kHz host. The IP and Synths
 path below are the previously documented device; substitute them if changed.
 
+## Candidate revision after the first Force installation
+
+WAVE and LFO SHAPE now use upstream direction-aware enum settling: a continuous
+ascending or descending input no longer alternates between adjacent options.
+Repeated inputs stay stable, exact selections still work and Q-Link turns can
+step in either direction. Host-position history resets on factory preset and
+chunk restore. Q-Link 15 is unassigned; the PRESET parameter retains index 14,
+and OUTPUT remains on Q-Link 16. Native top-bar presets and the touch PATCH
+selector remain available. Installed on the Force on 2026-10-26 after backing up the first 2.1.0 candidate
+at `/media/AKAI_SSD/Dub-Force-Siren-backups/2.1.0-before-enum-fix-20261026-135039/`.
+The installer restarted `acvs`; installed payload hashes match the revised ZIP.
+This verifies deployment only: physical control and listening retests are pending.
+
 ## Offline validation (2026-10-26)
 
 - Host integration, effects and control suites: ASan/UBSan clean; zero intercepted
@@ -23,9 +36,9 @@ path below are the previously documented device; substitute them if changed.
 - ARM integration, controls and effects pass under QEMU user emulation. ARM ELF32,
   hard-float, maximum GLIBC_2.29, sole public export VSTPluginMain.
 - SIMD/scalar rendering: 3,175,200 samples, maximum difference 0 LSB.
-- Skin audit: 20 controls, 16 Q-Links, 28 touch regions. Catalog check: zero warnings.
+- Skin audit: 20 controls, 15 assigned Q-Links, 28 touch regions. Catalog check: zero warnings.
 - Package payload is byte-identical to the tested release ARM binary. ZIP SHA-256:
-  `08a90cc4c727be0331012a83c4280b1e6c4faf97cfff154494992601439b7e76`.
+  `364d2be8719456e32ca684dfceb83059b03e919a175ef38c2e09818b96821ceb`.
 
 These are offline results; hardware menu appearance, physical Q-Links, listening
 and real-project CPU remain for the acceptance checklist below.
@@ -60,7 +73,7 @@ Record the Force firmware version and test date alongside your results.
 1. Load Dub Force Siren. Open the top-bar **PRESET** selector: it must list
    Air Raid, Laser, Fog Horn, Police, UFO, Space Echo, Smoke, Clash, Heavy Dub,
    Deep Orbit, Feedback Madness and Sci-Fi Alarm. Select each and press FIRE.
-2. Change PATCH by touch and Q-Link. Check native program readback, sound and
+2. Change PATCH by touch. Q-Link 15 must remain unassigned; OUTPUT stays on 16. Check native program readback, sound and
    control values. Change a sound control, save, close and reload the project:
    the edit and selected preset must survive.
 3. Open **Track Edit → Automation**, select plugin parameters, and move physical

@@ -95,6 +95,7 @@ typedef struct {
     int inpos;
     double bpm;
     atomic_int holdFrames[NPARAMS];  /* control/audio threads: lock-free atomic countdown */
+    _Atomic float last_enum[NPARAMS]; /* previous host position, not the snapped DSP value */
     _Atomic float shadow[NPARAMS];   /* unrounded position last set on an integer param; <0 = none */
     signed char last_on[NPARAMS];  /* last "<key>_on" value told to the host, +1 (0 = unknown) */
     atomic_char program_changed; /* deferred notification after a native preset selection */
@@ -197,18 +198,21 @@ static void setParameter(AEffect *e, int32_t i, float n) {
         return;
     }
     if (p->nopts > 1) {
-        /* A value on an option (button press, preset, automation) selects it. A value
-         * between options is a Q-Link/encoder nudge from the current one: step one
-         * option that way, else small nudges round back and never change state. */
+        /* Backport upstream settle(): use the direction of the host's continuous
+         * position, rather than the snapped DSP position. Comparing to the DSP
+         * alone makes successive increasing inputs alternate between options. */
         float pos = clamp01(n) * (p->nopts - 1);
-        if (fabsf(pos - (float)(int)(pos+.5f)) > 0.001f) {
-            nudge = 1;
-            float cur = get_norm(w, i) * (p->nopts - 1);
-            int idx = (int)(cur+.5f) + (pos > cur ? 1 : -1);
-            if (idx < 0) idx = 0;
-            if (idx > p->nopts - 1) idx = p->nopts - 1;
-            n = (float)idx / (p->nopts - 1);
+        float cur = get_norm(w, i) * (p->nopts - 1);
+        float last = atomic_exchange_explicit(&w->last_enum[i], pos, memory_order_relaxed);
+        float idx = roundf(pos);
+        nudge = fabsf(pos - idx) > 0.001f;
+        if (nudge) {
+            float dir = (last >= 0 && fabsf(pos - last) < 0.5f) ? pos - last : pos - cur;
+            idx = dir == 0 ? roundf(cur) : dir > 0 ? ceilf(pos - 0.001f) : floorf(pos + 0.001f);
         }
+        if (idx < 0) idx = 0;
+        if (idx > p->nopts - 1) idx = p->nopts - 1;
+        n = idx / (p->nopts - 1);
     }
 #ifdef DUB_TYPED_PARAMETERS
     float physical=parameter_to_physical(p,clamp01(n));
@@ -217,6 +221,10 @@ static void setParameter(AEffect *e, int32_t i, float n) {
 #else
     norm_to_str(p, n, buf, sizeof buf);
     g_api->set_param(w->dsp, PARAMS[i].key, buf);
+#endif
+#ifdef PROG_PARAM
+    if (i == PROG_PARAM)
+        for (int j = 0; j < NPARAMS; j++) if (j != i) w->last_enum[j] = -1;
 #endif
     w->shadow[i] = (p->int_display && !p->nopts) ? clamp01(n) : -1;
     if (PARAMS[i].momentary && n > 0.5f) w->holdFrames[i] = PARAMS[i].hold_ms > 0 ? (int)(PARAMS[i].hold_ms * 44.1f) : 1;
@@ -481,6 +489,7 @@ static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void
         memcpy(w->chunk, p, v);
         w->chunk[v - 1] = 0;
         g_api->set_param(w->dsp, "state", w->chunk);
+        for (int i = 0; i < NPARAMS; i++) w->last_enum[i] = -1;
         return 1;
     }
     default: return 0;
@@ -500,6 +509,7 @@ __attribute__((visibility("default"))) AEffect *VSTPluginMain(audioMasterCallbac
     atomic_init(&w->program_changed, 0);
     for (int i = 0; i < NPARAMS; i++) {
         atomic_init(&w->shadow[i], -1);
+        atomic_init(&w->last_enum[i], -1);
         atomic_init(&w->holdFrames[i], 0);
         atomic_init(&w->open[i], 0);
     }
