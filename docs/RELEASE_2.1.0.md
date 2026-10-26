@@ -1,12 +1,12 @@
 # 2.1.0 candidate: Force installation and acceptance
 
 Fixes issue [#1](https://github.com/no3z/mpc-dubsiren/issues/1) and adds the twelve
-factory sounds to the native PRESET menu in the top bar. PATCH and that menu
-select the same factory snapshots. The UID, 20 parameter indices, hidden popup
+factory sounds to the native PRESET menu in the top bar. The native menu selects the existing factory snapshots; the duplicate PATCH
+control has been removed from the panel and Q-Link 15 is unassigned. The UID, 20 parameter indices, hidden popup
 index and DFS2 state remain compatible with 2.0.0. Selecting a different factory
-preset resets sound controls and releases LATCH, as PATCH already does.
+preset resets sound controls and releases LATCH, as in the previous factory selector.
 
-This ARMv7 candidate has not yet been tested on a Force. Do not mark it stable,
+This ARMv7 candidate is installed on the Force; manual acceptance is pending. Do not mark it stable,
 close the issue or add a `tested.json` hardware claim until the checklist passes.
 Requires a modded Force with root access and a 44.1 kHz host. The IP and Synths
 path below are the previously documented device; substitute them if changed.
@@ -18,9 +18,12 @@ ascending or descending input no longer alternates between adjacent options.
 Repeated inputs stay stable, exact selections still work and Q-Link turns can
 step in either direction. Host-position history resets on factory preset and
 chunk restore. Q-Link 15 is unassigned; the PRESET parameter retains index 14,
-and OUTPUT remains on Q-Link 16. Native top-bar presets and the touch PATCH
-selector remain available. Installed on the Force on 2026-10-26 after backing up the first 2.1.0 candidate
+and OUTPUT remains on Q-Link 16. Presets are available only in the native top-bar menu; the duplicate PATCH
+control and popup are removed. The hidden popup parameter remains reserved
+for ABI compatibility. Installed on the Force on 2026-10-26 after backing up the first 2.1.0 candidate
 at `/media/AKAI_SSD/Dub-Force-Siren-backups/2.1.0-before-enum-fix-20261026-135039/`.
+The subsequent UI-only update was backed up at
+`2.1.0-before-remove-patch-20261026-135258/` in the same backup directory.
 The installer restarted `acvs`; installed payload hashes match the revised ZIP.
 This verifies deployment only: physical control and listening retests are pending.
 
@@ -32,13 +35,13 @@ This verifies deployment only: physical control and listening retests are pendin
 - Isolated explicit-refresh/stepper fixture: PASSED; native program notifications
   are deferred and consumed once.
 - All twelve native programs match existing factory snapshots; menu readback,
-  PATCH synchronization, custom edits and chunk restore pass on host and ARM.
+  preset-parameter synchronization, custom edits and chunk restore pass on host and ARM.
 - ARM integration, controls and effects pass under QEMU user emulation. ARM ELF32,
   hard-float, maximum GLIBC_2.29, sole public export VSTPluginMain.
 - SIMD/scalar rendering: 3,175,200 samples, maximum difference 0 LSB.
-- Skin audit: 20 controls, 15 assigned Q-Links, 28 touch regions. Catalog check: zero warnings.
+- Skin audit: 19 panel controls, 15 assigned Q-Links, 27 touch regions. Catalog check: zero warnings.
 - Package payload is byte-identical to the tested release ARM binary. ZIP SHA-256:
-  `364d2be8719456e32ca684dfceb83059b03e919a175ef38c2e09818b96821ceb`.
+  `94a43e0453cb5f24221c5708baea239c6bd08b43820352f0999c5835f49263ef`.
 
 These are offline results; hardware menu appearance, physical Q-Links, listening
 and real-project CPU remain for the acceptance checklist below.
@@ -73,13 +76,12 @@ Record the Force firmware version and test date alongside your results.
 1. Load Dub Force Siren. Open the top-bar **PRESET** selector: it must list
    Air Raid, Laser, Fog Horn, Police, UFO, Space Echo, Smoke, Clash, Heavy Dub,
    Deep Orbit, Feedback Madness and Sci-Fi Alarm. Select each and press FIRE.
-2. Change PATCH by touch. Q-Link 15 must remain unassigned; OUTPUT stays on 16. Check native program readback, sound and
-   control values. Change a sound control, save, close and reload the project:
+2. Verify PATCH is absent from the plugin panel. Q-Link 15 must remain unassigned; OUTPUT stays on 16. Select sounds from the top bar and check control values. Change a sound control, save, close and reload the project:
    the edit and selected preset must survive.
 3. Open **Track Edit → Automation**, select plugin parameters, and move physical
    Q-Links in both banks. Values must move continuously without snapping back.
    Record movements, then replay the automation and check the sound follows.
-4. Return to the plugin panel. Check both banks, PATCH popup, FIRE, LATCH,
+4. Return to the plugin panel. Check both banks, FIRE, LATCH,
    SIREN/ZAP and STOP. Load a copy of an existing 2.0.0 project and verify it.
 5. Check playback and CPU in a real project. Report audible glitches or overloads;
    the historical 2.0.0 benchmark is not a measurement of this candidate.

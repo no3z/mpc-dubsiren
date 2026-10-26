@@ -163,7 +163,7 @@ class Skin:
             c = 23 + int(5 * (1 - y / H))
             d.line((0, y, W, y), fill=(c, c + 1, c))
         center(d, (16, 12, 220, 32), "DUB FORCE", 24, AMBER, True)
-        center(d, (16, 46, 220, 22), "SIREN  2.0", 13, DIM)
+        center(d, (16, 46, 220, 22), "SIREN  2.1", 13, DIM)
         number = 0
         for row, (bank, groups) in zip(ROWS, BANKS):
             k = 0
@@ -177,8 +177,9 @@ class Skin:
                 for key in keys:
                     number += 1
                     cx = column(k)
-                    center(d, (cx, row + TITLE_Y, 30, 22), str(number), 13, AMBER, True)
-                    center(d, (cx + 26, row + TITLE_Y, COL - 52, 22), LABELS[key], 15, CREAM, True)
+                    if key != "preset":
+                        center(d, (cx, row + TITLE_Y, 30, 22), str(number), 13, AMBER, True)
+                        center(d, (cx + 26, row + TITLE_Y, COL - 52, 22), LABELS[key], 15, CREAM, True)
                     k += 1
 
     def fader(self, key, x, row):
@@ -258,33 +259,6 @@ class Skin:
             self.button(key, label, (x + 2, row + CONTROL_Y + i * (h + gap), COL - 4, h),
                         option=i, total=len(labels), size=15)
 
-    def preset(self, x, row):
-        box = (x + 2, row + CONTROL_Y, COL - 4, ROW_H - 4 - CONTROL_Y)
-        bx, by, bw, bh = box
-        d = self.draw
-        d.rounded_rectangle((bx, by, bx + bw, by + bh), radius=5, fill="#262921", outline="#74664A")
-        center(d, (bx, by + 8, bw, 20), "TAP TO CHOOSE", 10, DIM)
-        center(d, (bx, by + bh - 34, bw, 26), "v", 18, AMBER)
-        label = (4, 40, bw - 8, 80)
-        self.defs.append(local("PresetField", [value_label(label, 17, "Text")],
-                               [action("Mouse Down", "Toggle Switch"), action("Enter Pressed", "Toggle Switch")]))
-        self.placed("PresetField", "PATCH", "preset__open", box, {"Text": "preset"})
-        self.texts.append(((bx + label[0], by + label[1], label[2], label[3]), display(self.ps["preset"]), 17))
-        condition = f"IndexedEnabling/1/2/Parameter {self.index['preset__open']}"
-        pbox = (176, 92, 928, 252)
-        panel = Image.new("RGB", pbox[2:], "#1B1D18")
-        g = ImageDraw.Draw(panel)
-        g.rounded_rectangle((0, 0, pbox[2] - 1, pbox[3] - 1), radius=7, outline="#" + AMBER, width=2)
-        center(g, (12, 6, pbox[2] - 24, 26), "CHOOSE PATCH  /  TAP A SOUND TO CLOSE", 16, AMBER, True)
-        self.save("preset_panel.png", panel)
-        self.defs.append(local("PresetPanel", [component("Image", {"version": 2, "imageType": "Regular",
-            "colour": "0", "image": "preset_panel.png"}, (0, 0, *pbox[2:]))]))
-        self.placed("PresetPanel", "PATCHES", "preset__open", pbox, condition=condition)
-        self.open_layers.append((panel, pbox[:2]))
-        for i, label in enumerate(self.ps["preset"]["options"]):
-            self.button("preset", label.upper(), (195 + (i % 3) * 300, 128 + (i // 3) * 54, 290, 46),
-                        option=i, total=12, condition=condition, size=16)
-
     def build(self):
         self.background()
         k = 0
@@ -295,7 +269,7 @@ class Skin:
                     if key in CHOICES:
                         self.selector(key, x, row)
                     elif key == "preset":
-                        self.preset(x, row)
+                        pass  # Presets are available in the native top-bar menu.
                     else:
                         self.fader(key, x, row)
                     k += 1
@@ -381,7 +355,7 @@ def validate(folder, plist, skin):
                     if not 0 <= target < len(plist):
                         errors.append("bad parameter " + key)
     for i, p in enumerate(plist):
-        if i not in assigned:
+        if p["key"] not in ("preset", "preset__open") and i not in assigned:
             errors.append("unbound parameter " + p["key"])
     for name in refs:
         if not (out / name).is_file():

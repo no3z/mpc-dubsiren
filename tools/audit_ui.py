@@ -55,7 +55,8 @@ for c in defs["SirenPage"]["componentsData"]:
     controls.append((c["componentData"]["name"], target, box, conditional))
     if not conditional:
         touch.append(dict(control=c["componentData"]["name"], param=params[target]["key"], bounds=box))
-assert visible == set(range(len(params))), sorted(set(range(len(params))) - visible)
+assert visible == set(range(len(params))) - {index["preset"]}, "PRESET must only appear in the native menu"
+assert not any("PATCH" in name.upper() or t == index["preset"] for name,t,box,cond in controls), "PATCH UI remains"
 # Each knob's control lies in its column and its bank's row.
 for i, key in enumerate(ui.QLINKS):
     if key is None:
@@ -70,7 +71,7 @@ for i, p in enumerate(params):
     opts = p.get("options")
     span = " / ".join(opts) if opts else f"{p['min']:g}…{p['max']:g} {p.get('unit', '')}".strip()
     default = opts[ui.physical_default(p)] if opts else f"{ui.physical_default(p):g} {p.get('unit', '')}".strip()
-    where = f"bank {i // 8 + 1} knob {i % 8 + 1} ({group[p['key']]})" if i < 16 and p["key"] != "preset" else "native PRESET menu / touch" if p["key"] == "preset" else "touch only"
+    where = f"bank {i // 8 + 1} knob {i % 8 + 1} ({group[p['key']]})" if i < 16 and p["key"] != "preset" else "native PRESET menu" if p["key"] == "preset" else "touch only"
     rows.append(f"| {i} | `{p['key']}` | {p['name']} | {where} | {dsp[p['key']]} | {span} | {default} |")
 text = f"""# UI and Q-Link wiring audit
 
@@ -81,9 +82,9 @@ The single SIREN page mirrors the Force Q-Link banks: the top row is bank 1
 (knobs 1–8), the bottom row bank 2 (knobs 9–16), and every knob's control sits in
 its own column. Q-Links map parameters 0–15 except PRESET (14), leaving knob 15 free, in knob order through native
 slots 13, 9, 5, 1, 14, 10, 6, 2 (bank 1) and 15, 11, 7, 3, 16, 12, 8, 4 (bank 2);
-Program Mode uses the same map. Every one of the {len(params)} parameters has a touch
-control; PATCH uses the native PRESET menu or touch; FIRE, LATCH, SIREN/ZAP and STOP are also touch controls. Hidden parameter
-{popup} (`preset__open`) only opens the PATCH list and is never saved.
+Program Mode uses the same map. The {len(params) - 1} non-preset parameters have touch controls; presets use only
+the native top-bar PRESET menu. Q-Link 15 is unassigned. Hidden parameter
+{popup} (`preset__open`) is retained for ABI compatibility but has no UI and is never saved.
 
 | Index | Key | Name | Q-Link | DSP destination | Range | Default |
 | ---: | --- | --- | --- | --- | --- | --- |
@@ -96,4 +97,4 @@ Physical touch feel and Q-Link bank selection must be confirmed on the Force.
 """
 (ROOT / "docs/UI_WIRING_AUDIT.md").write_text(text)
 (ROOT / "resources/rc-touch-targets.json").write_text(json.dumps(touch, indent=2) + "\n")
-print(f"UI AUDIT PASS: {len(params)} parameters bound, 15 Q-Links on their knob columns, {len(touch)} touch regions")
+print(f"UI AUDIT PASS: {len(params)-1} panel parameters bound, 15 Q-Links on their knob columns, {len(touch)} touch regions")

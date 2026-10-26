@@ -19,7 +19,7 @@ Indices 0–15 are the Q-Links in knob order. VST automation recorded with 1.0.x
 | 11 | `feedback` | 0 .. 88 | 42 | % | bank 2, knob 4 |
 | 12 | `delay_mix` | 0 .. 100 | 100 | % | bank 2, knob 5 |
 | 13 | `ping` | 0 .. 100 | 0 | % | bank 2, knob 6 |
-| 14 | `preset` | Air Raid, Laser, Fog Horn, Police, UFO, Space Echo, Smoke, Clash, Heavy Dub, Deep Orbit, Feedback Madness, Sci-Fi Alarm | 0 |  | native PRESET / touch |
+| 14 | `preset` | Air Raid, Laser, Fog Horn, Police, UFO, Space Echo, Smoke, Clash, Heavy Dub, Deep Orbit, Feedback Madness, Sci-Fi Alarm | 0 |  | native PRESET |
 | 15 | `output` | 0 .. 100 | 100 | % | bank 2, knob 8 |
 | 16 | `fire` | 0 .. 1 | 0 |  | touch |
 | 17 | `latch` | OFF, ON | 0 |  | touch |

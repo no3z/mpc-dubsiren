@@ -7,9 +7,9 @@ The single SIREN page mirrors the Force Q-Link banks: the top row is bank 1
 (knobs 1–8), the bottom row bank 2 (knobs 9–16), and every knob's control sits in
 its own column. Q-Links map parameters 0–15 except PRESET (14), leaving knob 15 free, in knob order through native
 slots 13, 9, 5, 1, 14, 10, 6, 2 (bank 1) and 15, 11, 7, 3, 16, 12, 8, 4 (bank 2);
-Program Mode uses the same map. Every one of the 20 parameters has a touch
-control; PATCH uses the native PRESET menu or touch; FIRE, LATCH, SIREN/ZAP and STOP are also touch controls. Hidden parameter
-20 (`preset__open`) only opens the PATCH list and is never saved.
+Program Mode uses the same map. The 19 non-preset parameters have touch controls; presets use only
+the native top-bar PRESET menu. Q-Link 15 is unassigned. Hidden parameter
+20 (`preset__open`) is retained for ABI compatibility but has no UI and is never saved.
 
 | Index | Key | Name | Q-Link | DSP destination | Range | Default |
 | ---: | --- | --- | --- | --- | --- | --- |
@@ -27,14 +27,14 @@ control; PATCH uses the native PRESET menu or touch; FIRE, LATCH, SIREN/ZAP and 
 | 11 | `feedback` | FEEDBACK | bank 2 knob 4 (ECHO) | EchoConfig.feedback | 0…88 % | 42 % |
 | 12 | `delay_mix` | ECHO MIX | bank 2 knob 5 (ECHO) | EchoConfig.mix → wet gain | 0…100 % | 100 % |
 | 13 | `ping` | PING PONG | bank 2 knob 6 (ECHO) | EchoConfig.ping → pan gains | 0…100 % | 0 % |
-| 14 | `preset` | PRESET | native PRESET menu / touch | Impl::preset snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid |
+| 14 | `preset` | PRESET | native PRESET menu | Impl::preset snapshot | Air Raid / Laser / Fog Horn / Police / UFO / Space Echo / Smoke / Clash / Heavy Dub / Deep Orbit / Feedback Madness / Sci-Fi Alarm | Air Raid |
 | 15 | `output` | OUTPUT | bank 2 knob 8 (MASTER) | outputGain after limiter | 0…100 % | 100 % |
 | 16 | `fire` | FIRE | touch only | fireTriggers → pulse / ZAP | 0…1 | 0 |
 | 17 | `latch` | LATCH | touch only | gate | OFF / ON | OFF |
 | 18 | `mode` | MODE | touch only | SIREN (LFO) / ZAP (sweep) | SIREN / ZAP | SIREN |
 | 19 | `stop` | STOP | touch only | reset, clear LATCH and notes | 0…1 | 0 |
 
-28 unconditional touch regions (bounds in `resources/rc-touch-targets.json`)
+27 unconditional touch regions (bounds in `resources/rc-touch-targets.json`)
 were checked for canvas bounds and overlap by `tools/skin_design.py`. Faders are
 141×174 drag areas; WAVE/SHAPE options are 145 px wide buttons.
 Physical touch feel and Q-Link bank selection must be confirmed on the Force.
