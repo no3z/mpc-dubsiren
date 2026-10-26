@@ -1,5 +1,8 @@
 # Force installation
 
+For the 2.1.0 candidate, use [the current upgrade and test steps](RELEASE_2.1.0.md).
+The 2.0.0 commands below document the previous installation.
+
 The documented sd88me installer is used. Its account is `root`; target device
 was verified over SSH as Akai Professional Force, armv7l, inMusic az01 Linux.
 Existing settings register `/media/AKAI_SSD/Synths`, which is the confirmed

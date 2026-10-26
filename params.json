@@ -3,7 +3,7 @@
     "key": "pitch",
     "name": "PITCH",
     "min": 10,
-    "max": 2400,
+    "max": 8000,
     "default": 620,
     "unit": "Hz",
     "scale": "log"

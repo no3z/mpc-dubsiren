@@ -11,7 +11,7 @@ P=[]
 def num(key,name,lo,hi,default,unit='',**kw): P.append(dict(key=key,name=name,min=lo,max=hi,default=default,unit=unit,**kw))
 def opt(key,name,options,default=0,**kw): P.append(dict(key=key,name=name,options=options.split(','),default=default,**kw))
 # Bank 1 / SIREN: OSC, LFO, ZAP, ENVELOPE
-num('pitch','PITCH',10,2400,620,'Hz',scale='log')
+num('pitch','PITCH',10,8000,620,'Hz',scale='log')
 opt('wave','WAVE','SINE,TRIANGLE,SAW,SQUARE,NOISE',default=3)
 num('rate','LFO RATE',.05,24,.55,'Hz')
 # Depth is relative to pitch so PITCH transposes the whole sweep (480 Hz at 620 Hz).
@@ -38,6 +38,8 @@ assert len(P)==20
 Path('params.json').write_text(json.dumps(P,indent=2)+'\n')
 Path('src/param_ids.h').write_text('#pragma once\nnamespace dub { enum Param {\n'+''.join('    P_'+p['key']+',\n' for p in P)+'    P_Count\n}; }\n')
 rows=['# Parameters','','Project state is saved by key (`DFS2 key=value ...`); 1.0.x `DFS1` positional chunks are migrated on load.','Indices 0–15 are the Q-Links in knob order. VST automation recorded with 1.0.x indices does not carry over.','','| Index | Key | Range / options | Default | Units | Q-Link |','|---:|---|---|---|---|---|']
-for i,p in enumerate(P): rows.append(f"| {i} | `{p['key']}` | {', '.join(p['options']) if 'options' in p else str(p['min'])+' .. '+str(p['max'])} | {p['default']} | {p.get('unit','')} | {f'bank {i//8+1}, knob {i%8+1}' if i<16 else 'touch'} |")
-rows+=['','Pitch uses logarithmic 10–2400 Hz mapping; other continuous controls are linear. FIRE is a 250 ms tap trigger (or one complete ZAP); MIDI notes provide press/release and LATCH sustains. LFO DEPTH is a percentage of the current pitch: 100% sweeps between 0 Hz and twice the pitch. STOP clears LATCH, gates and echo tails. Presets are complete snapshots of every sound parameter. ZAP time is fixed at 180 ms.']
+for i,p in enumerate(P):
+    qlink = f'bank {i//8+1}, knob {i%8+1}' if i<16 and p['key']!='preset' else 'native PRESET' if p['key']=='preset' else 'touch'
+    rows.append(f"| {i} | `{p['key']}` | {', '.join(p['options']) if 'options' in p else str(p['min'])+' .. '+str(p['max'])} | {p['default']} | {p.get('unit','')} | {qlink} |")
+rows+=['','Pitch uses logarithmic 10–8000 Hz mapping; other continuous controls are linear. FIRE is a 250 ms tap trigger (or one complete ZAP); MIDI notes provide press/release and LATCH sustains. LFO DEPTH is a percentage of the current pitch: 100% sweeps between 0 Hz and twice the pitch. STOP clears LATCH, gates and echo tails. Presets are complete snapshots of every sound parameter. ZAP time is fixed at 180 ms.']
 Path('docs/PARAMETERS.md').write_text('\n'.join(rows)+'\n')

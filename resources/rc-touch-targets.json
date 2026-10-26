@@ -210,16 +210,6 @@
     ]
   },
   {
-    "control": "PATCH",
-    "param": "preset",
-    "bounds": [
-      960,
-      412,
-      145,
-      206
-    ]
-  },
-  {
     "control": "OUTPUT",
     "param": "output",
     "bounds": [

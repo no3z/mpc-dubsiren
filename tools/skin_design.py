@@ -38,7 +38,7 @@ BANKS = [
     ("FX", [("FILTER", ["cutoff", "resonance"]), ("ECHO", ["delay_time", "feedback", "delay_mix", "ping"]),
             ("MASTER", ["preset", "output"])]),
 ]
-QLINKS = [key for _, groups in BANKS for _, keys in groups for key in keys]
+QLINKS = [key if key != "preset" else None for _, groups in BANKS for _, keys in groups for key in keys]
 LABELS = {"pitch": "PITCH", "wave": "WAVE", "rate": "RATE", "depth": "DEPTH", "lfo_wave": "SHAPE",
           "zap_sweep": "SWEEP", "attack": "ATTACK", "release": "RELEASE", "cutoff": "CUTOFF",
           "resonance": "RESO", "delay_time": "TIME", "feedback": "FEEDBACK", "delay_mix": "MIX",
@@ -163,7 +163,7 @@ class Skin:
             c = 23 + int(5 * (1 - y / H))
             d.line((0, y, W, y), fill=(c, c + 1, c))
         center(d, (16, 12, 220, 32), "DUB FORCE", 24, AMBER, True)
-        center(d, (16, 46, 220, 22), "SIREN  2.0", 13, DIM)
+        center(d, (16, 46, 220, 22), "SIREN  2.1", 13, DIM)
         number = 0
         for row, (bank, groups) in zip(ROWS, BANKS):
             k = 0
@@ -177,8 +177,9 @@ class Skin:
                 for key in keys:
                     number += 1
                     cx = column(k)
-                    center(d, (cx, row + TITLE_Y, 30, 22), str(number), 13, AMBER, True)
-                    center(d, (cx + 26, row + TITLE_Y, COL - 52, 22), LABELS[key], 15, CREAM, True)
+                    if key != "preset":
+                        center(d, (cx, row + TITLE_Y, 30, 22), str(number), 13, AMBER, True)
+                        center(d, (cx + 26, row + TITLE_Y, COL - 52, 22), LABELS[key], 15, CREAM, True)
                     k += 1
 
     def fader(self, key, x, row):
@@ -258,33 +259,6 @@ class Skin:
             self.button(key, label, (x + 2, row + CONTROL_Y + i * (h + gap), COL - 4, h),
                         option=i, total=len(labels), size=15)
 
-    def preset(self, x, row):
-        box = (x + 2, row + CONTROL_Y, COL - 4, ROW_H - 4 - CONTROL_Y)
-        bx, by, bw, bh = box
-        d = self.draw
-        d.rounded_rectangle((bx, by, bx + bw, by + bh), radius=5, fill="#262921", outline="#74664A")
-        center(d, (bx, by + 8, bw, 20), "TAP TO CHOOSE", 10, DIM)
-        center(d, (bx, by + bh - 34, bw, 26), "v", 18, AMBER)
-        label = (4, 40, bw - 8, 80)
-        self.defs.append(local("PresetField", [value_label(label, 17, "Text")],
-                               [action("Mouse Down", "Toggle Switch"), action("Enter Pressed", "Toggle Switch")]))
-        self.placed("PresetField", "PATCH", "preset__open", box, {"Text": "preset"})
-        self.texts.append(((bx + label[0], by + label[1], label[2], label[3]), display(self.ps["preset"]), 17))
-        condition = f"IndexedEnabling/1/2/Parameter {self.index['preset__open']}"
-        pbox = (176, 92, 928, 252)
-        panel = Image.new("RGB", pbox[2:], "#1B1D18")
-        g = ImageDraw.Draw(panel)
-        g.rounded_rectangle((0, 0, pbox[2] - 1, pbox[3] - 1), radius=7, outline="#" + AMBER, width=2)
-        center(g, (12, 6, pbox[2] - 24, 26), "CHOOSE PATCH  /  TAP A SOUND TO CLOSE", 16, AMBER, True)
-        self.save("preset_panel.png", panel)
-        self.defs.append(local("PresetPanel", [component("Image", {"version": 2, "imageType": "Regular",
-            "colour": "0", "image": "preset_panel.png"}, (0, 0, *pbox[2:]))]))
-        self.placed("PresetPanel", "PATCHES", "preset__open", pbox, condition=condition)
-        self.open_layers.append((panel, pbox[:2]))
-        for i, label in enumerate(self.ps["preset"]["options"]):
-            self.button("preset", label.upper(), (195 + (i % 3) * 300, 128 + (i // 3) * 54, 290, 46),
-                        option=i, total=12, condition=condition, size=16)
-
     def build(self):
         self.background()
         k = 0
@@ -295,7 +269,7 @@ class Skin:
                     if key in CHOICES:
                         self.selector(key, x, row)
                     elif key == "preset":
-                        self.preset(x, row)
+                        pass  # Presets are available in the native top-bar menu.
                     else:
                         self.fader(key, x, row)
                     k += 1
@@ -327,7 +301,8 @@ def qlinks(keys, index):
     order = [13, 9, 5, 1, 14, 10, 6, 2, 15, 11, 7, 3, 16, 12, 8, 4]
     result = {f"Q-Link {i}": -1 for i in range(1, 17)}
     for slot, key in enumerate(keys):
-        result[f"Q-Link {order[slot]}"] = index[key]
+        if key is not None:
+            result[f"Q-Link {order[slot]}"] = index[key]
     return result
 
 
@@ -358,8 +333,8 @@ def validate(folder, plist, skin):
     tui = json.loads((out / "TUI.json").read_text())
     defs = {d["key"]: d["value"] for d in tui["pageData"]["componentDefinitions"]["localComponentDefinitions"]}
     errors, refs, assigned = [], set(), set()
-    if QLINKS != [p["key"] for p in plist[:16]]:
-        errors.append("Q-Link order must equal parameter indices 0..15")
+    if QLINKS != [p["key"] if p["key"] != "preset" else None for p in plist[:16]]:
+        errors.append("Q-Link order must preserve parameter indices, with PRESET unassigned")
     if len(set(QLINKS)) != 16:
         errors.append("duplicate Q-Link")
     for key, d in defs.items():
@@ -380,7 +355,7 @@ def validate(folder, plist, skin):
                     if not 0 <= target < len(plist):
                         errors.append("bad parameter " + key)
     for i, p in enumerate(plist):
-        if i not in assigned:
+        if p["key"] not in ("preset", "preset__open") and i not in assigned:
             errors.append("unbound parameter " + p["key"])
     for name in refs:
         if not (out / name).is_file():
@@ -406,6 +381,7 @@ def validate(folder, plist, skin):
 def main():
     cfg = gen_vst.load(str(ROOT / "vst.json"))
     plist, _ = parameter_source.load(str(ROOT / "params.json"))
+    gen_vst.check_lock(str(ROOT), plist)
     popup = shadow_skin.popup_params(str(ROOT / "layout.conf"), plist)
     assert [p["key"] for p in popup] == [k + "__open" for k in POPUPS], "Popup IDs must stay stable"
     plist = plist + popup
@@ -425,7 +401,7 @@ def main():
     opened.save(resources / "preview-presets.png", optimize=True)
     (resources / "ui-validation.json").write_text(json.dumps(report, indent=2) + "\n")
     print(f"UI: {report['touch_regions']} touch regions, {report['assets_checked']} assets, "
-          f"16 Q-Links in {sum(len(g) for _, g in BANKS)} groups; bounds/overlaps OK")
+          f"15 Q-Links in {sum(len(g) for _, g in BANKS)} groups; bounds/overlaps OK")
 
 
 if __name__ == "__main__":

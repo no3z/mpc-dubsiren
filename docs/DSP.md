@@ -39,7 +39,7 @@ under qemu-user.
 
 ## Oscillator, modulation and envelope
 
-PITCH is 10–2400 Hz (logarithmic knob). LFO DEPTH is a percentage of the gliding
+PITCH is 10–8000 Hz (logarithmic knob). LFO DEPTH is a percentage of the gliding
 pitch: `f = pitch·(1 + depth·LFO)`. 100% sweeps between 0 Hz and twice the pitch,
 so PITCH transposes the whole siren at every value. (1.0.x used absolute Hz depth;
 below ~100 Hz the default 480 Hz depth swamped the pitch and the knob had little

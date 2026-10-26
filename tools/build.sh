@@ -24,6 +24,8 @@ build_target() {
       -DDUB_TYPED_PARAMETERS -Ibuild -Isrc -Ivendor/mpc-vst-plugins/wrapper)
     special=(-fsanitize=address,undefined -fno-omit-frame-pointer)
   fi
+  local runner=()
+  if [[ "$target" == armtest && -n "${DUB_QEMU_ARM:-}" ]]; then runner=("$DUB_QEMU_ARM"); fi
   local arch=()
   if [[ -n "$extra" ]]; then read -r -a arch <<< "$extra"; fi
   "$cc" -std=gnu11 "${common[@]}" "${special[@]}" "${arch[@]}" -c \
@@ -44,14 +46,14 @@ build_target() {
     "$cxx" -std=c++17 "${common[@]}" "${special[@]}" "${arch[@]}" -c tests/integration.cpp -o "$out/integration.o"
     "$cxx" "${special[@]}" "${arch[@]}" "${objects[@]}" "$out/integration.o" -lm \
       -pthread -Wl,--wrap=malloc,--wrap=calloc,--wrap=realloc,--wrap=free -o "$out/integration_test"
-    ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 "$out/integration_test"
+    ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 "${runner[@]}" "$out/integration_test"
     "$cxx" -std=c++17 "${common[@]}" "${special[@]}" "${arch[@]}" -Itests tests/performance_controls.cpp \
       "${objects[@]}" -lm -ldl -o "$out/performance_controls"
-    ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 "$out/performance_controls"
+    ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 "${runner[@]}" "$out/performance_controls"
     if [[ -f src/effects.cpp && -f tests/effects_test.cpp ]]; then
       "$cxx" -std=c++17 "${common[@]}" "${special[@]}" "${arch[@]}" src/effects.cpp tests/effects_test.cpp \
         -lm -o "$out/effects_test"
-      ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 "$out/effects_test"
+      ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 "${runner[@]}" "$out/effects_test"
     fi
     if [[ "$target" == test ]]; then
       # The SIMD build and the portable scalar build render the same presets.
@@ -85,12 +87,12 @@ PY
 
 case "$MODE" in
   host) build_target host gcc g++ "" ;;
-  test) build_target test gcc g++ "" ;;
+  test) python3 tests/wrapper_contracts.py; build_target test gcc g++ "" ;;
   arm) docker run --rm --user "$(id -u):$(id -g)" -v "$ROOT:/work" -w /work \
     "$ARM_IMAGE" bash tools/build.sh arm-internal ;;
   arm-internal) build_target arm arm-linux-gnueabihf-gcc arm-linux-gnueabihf-g++ \
     '-mcpu=cortex-a17 -mfpu=neon-vfpv4 -mfloat-abi=hard' ;;
-  arm-test) docker run --rm --user "$(id -u):$(id -g)" -v "$ROOT:/work" -w /work \
+  arm-test) docker run --rm --user "$(id -u):$(id -g)" -v "$ROOT:/work" -w /work -e DUB_QEMU_ARM \
     "$ARM_IMAGE" bash tools/build.sh arm-test-internal ;;
   arm-test-internal) build_target armtest arm-linux-gnueabihf-gcc arm-linux-gnueabihf-g++ \
     '-mcpu=cortex-a17 -mfpu=neon-vfpv4 -mfloat-abi=hard' ;;

@@ -1,6 +1,6 @@
 {
-  "assets_checked": 56,
-  "touch_regions": 28,
+  "assets_checked": 31,
+  "touch_regions": 27,
   "parameters": 21,
   "qlinks": {
     "bank 1 knob 1": "pitch",
@@ -17,7 +17,7 @@
     "bank 2 knob 4": "feedback",
     "bank 2 knob 5": "delay_mix",
     "bank 2 knob 6": "ping",
-    "bank 2 knob 7": "preset",
+    "bank 2 knob 7": null,
     "bank 2 knob 8": "output"
   },
   "groups": {

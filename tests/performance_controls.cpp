@@ -60,6 +60,44 @@ static void migrated(AEffect* a,const std::string& saved){
     require(std::fabs(hz-expected)<=expected*1e-5f+1e-4f,"legacy Hz depth becomes the same sweep as a pitch percentage");
     name(a,dub::P_wave,legacyWaveNames[int(old.at("wave"))]);
 }
+static void nativePrograms(){
+    AEffect* a=VSTPluginMain(host);AEffect* b=VSTPluginMain(host);
+    require(a && b,"native program instances");if(!a||!b)return;
+    char product[32]{};a->dispatcher(a,45,0,0,product,0);
+    require(!std::strcmp(product,"Dub Force Siren"),"original product name");
+    require(a->uniqueID==0x44625372,"published UID preserved");
+    require(a->numPrograms==12,"twelve programs in native PRESET menu");
+    require(a->version==2100,"2.1.0 VST version");
+    for(int i=0;i<12;++i){
+        char label[24]={};
+        require(a->dispatcher(a,29,i,0,label,0)==1,"indexed program name accepted");
+        require(!std::strcmp(label,PARAMS[dub::P_preset].opts[i]),"native program name matches factory preset");
+        // Force a different selection first: reselecting the current program preserves edits.
+        a->dispatcher(a,2,0,(i+1)%12,nullptr,0);
+        require(a->dispatcher(a,2,0,i,nullptr,0)==1,"native program selection accepted");
+        b->setParameter(b,dub::P_preset,i/11.f);
+        require(physical(chunk(a))==physical(chunk(b)),"native program equals existing factory snapshot");
+        require(a->dispatcher(a,3,0,0,nullptr,0)==i,"native program readback");
+        a->dispatcher(a,5,0,0,label,0);
+        require(!std::strcmp(label,PARAMS[dub::P_preset].opts[i]),"current native program name");
+        a->setParameter(a,dub::P_pitch,.123f);auto saved=chunk(a);
+        a->dispatcher(a,2,0,i,nullptr,0);
+        require(chunk(a)==saved,"host program reselect preserves custom edits");
+        b->dispatcher(b,24,0,saved.size(),const_cast<char*>(saved.data()),0);
+        require(b->dispatcher(b,3,0,0,nullptr,0)==i && chunk(b)==saved,"program and edits survive chunk restore");
+    }
+    a->setParameter(a,dub::P_preset,3/11.f);
+    require(a->dispatcher(a,3,0,0,nullptr,0)==3,"Q-Link preset selection follows native menu");
+    auto saved=chunk(a);char label[24];
+    for(int i:{-1,12,999}){
+        require(a->dispatcher(a,2,0,i,nullptr,0)==0,"invalid program selection rejected");
+        require(a->dispatcher(a,29,i,0,label,0)==0,"invalid program name rejected");
+        require(chunk(a)==saved,"invalid program leaves sound unchanged");
+    }
+    require(a->dispatcher(a,5,0,0,nullptr,0)==0,"NULL program name buffer rejected");
+    close(a);close(b);
+    std::puts("NATIVE PROGRAMS: 12 factory snapshots, menu/Q-Link sync, edits and restore checked");
+}
 static void mapping(){
     AEffect* a=VSTPluginMain(host);require(a!=nullptr,"controls instance");if(!a)return;
     const char* waves[]={"SINE","TRIANGLE","SAW","SQUARE","NOISE"};
@@ -68,15 +106,36 @@ static void mapping(){
     for(int i=1;i<5;++i){a->setParameter(a,dub::P_wave,a->getParameter(a,dub::P_wave)+.001f);require(a->getParameter(a,dub::P_wave)==i/4.f,"one clockwise wave step");name(a,dub::P_wave,waves[i]);}
     for(int i=3;i>=0;--i){a->setParameter(a,dub::P_wave,a->getParameter(a,dub::P_wave)-.001f);require(a->getParameter(a,dub::P_wave)==i/4.f,"one counterclockwise wave step");name(a,dub::P_wave,waves[i]);}
     for(int k=0;k<1000;++k){a->setParameter(a,dub::P_wave,k/999.f);float v=a->getParameter(a,dub::P_wave);require(v>=0&&v<=1&&v*4==std::round(v*4),"no ambiguous intermediate wave values");}
+    for(int param:{dub::P_wave,dub::P_lfo_wave}){
+        int steps=PARAMS[param].nopts-1;
+        a->setParameter(a,param,0);
+        float previous=0;
+        for(int k=1;k<=1000;++k){
+            float input=k/1000.f;a->setParameter(a,param,input);
+            float current=a->getParameter(a,param);
+            require(current>=previous,"increasing enum sweep never reverses");previous=current;
+            a->setParameter(a,param,input);
+            require(a->getParameter(a,param)==current,"repeated enum input does not toggle");
+        }
+        for(int k=999;k>=0;--k){
+            a->setParameter(a,param,k/1000.f);float current=a->getParameter(a,param);
+            require(current<=previous,"decreasing enum sweep never reverses");previous=current;
+        }
+        a->setParameter(a,param,0);
+        for(int k=1;k<=steps;++k){a->setParameter(a,param,a->getParameter(a,param)+1/128.f);
+            require(std::fabs(a->getParameter(a,param)-float(k)/steps)<1e-6,"Q-Link clockwise enum steps");}
+        for(int k=steps-1;k>=0;--k){a->setParameter(a,param,a->getParameter(a,param)-1/128.f);
+            require(std::fabs(a->getParameter(a,param)-float(k)/steps)<1e-6,"Q-Link reverse enum steps");}
+    }
     const char* shapes[]={"TRIANGLE","SQUARE","SAW","SINE"};
     for(int i=0;i<4;++i){a->setParameter(a,dub::P_lfo_wave,i/3.f);name(a,dub::P_lfo_wave,shapes[i]);}
-    for(float hz:{10.f,20.f,30.f,40.f,50.f,60.f,80.f,100.f,150.f,620.f,2400.f}){
-        const float n=std::log(hz/10.f)/std::log(240.f);a->setParameter(a,dub::P_pitch,n);
+    for(float hz:{10.f,20.f,30.f,40.f,50.f,60.f,80.f,100.f,150.f,620.f,2400.f,4000.f,6000.f,8000.f}){
+        const float n=std::log(hz/10.f)/std::log(800.f);a->setParameter(a,dub::P_pitch,n);
         auto v=physical(chunk(a));require(std::fabs(v[dub::P_pitch]-hz)<hz*2e-6f,"log pitch physical mapping");
         require(std::fabs(a->getParameter(a,dub::P_pitch)-n)<2e-6f,"log pitch inverse mapping");
         char display[24]{};a->dispatcher(a,7,dub::P_pitch,0,display,0);require(std::fabs(std::atof(display)-hz)<.6f,"pitch displays Hz");
     }
-    a->setParameter(a,dub::P_pitch,std::log(20.f/10)/std::log(240.f));float start=physical(chunk(a))[dub::P_pitch];
+    a->setParameter(a,dub::P_pitch,std::log(20.f/10)/std::log(800.f));float start=physical(chunk(a))[dub::P_pitch];
     a->setParameter(a,dub::P_pitch,a->getParameter(a,dub::P_pitch)+.001f);
     require(physical(chunk(a))[dub::P_pitch]-start<.2f,"small encoder step near 20 Hz");
     require(a->dispatcher(a,27,dub::P_pitch,0,(void*)"20",0)==1,"native physical numeric editing");
@@ -173,7 +232,7 @@ static void simdAccuracy(){
 static void dry(dub::Siren& s){s.set(dub::P_wave,0);s.set(dub::P_depth,0);s.set(dub::P_delay_mix,0);s.set(dub::P_cutoff,9000);s.set(dub::P_resonance,0);s.set(dub::P_output,50);}
 static void lowPitch(){
     float l[128],r[128];
-    for(float hz:{10.f,20.f,30.f,50.f,100.f,620.f,2400.f}){
+    for(float hz:{10.f,20.f,30.f,50.f,100.f,620.f,2400.f,4000.f,6000.f,8000.f}){
         dub::Siren s;dry(s);s.set(dub::P_pitch,hz);s.set(dub::P_latch,1);for(int k=0;k<500;++k)s.render(l,r,128);
         int crossings=0;float previous=l[127];double peak=0;
         for(int k=0;k<44100*6/128;++k){s.render(l,r,128);for(int i=0;i<128;++i){if(previous<=0&&l[i]>0)++crossings;previous=l[i];peak=std::max(peak,double(std::fabs(l[i])));}}
@@ -181,7 +240,7 @@ static void lowPitch(){
     }
     // With the default 77% depth every PITCH value transposes the whole sweep:
     // the average frequency over whole LFO cycles follows the knob down to 10 Hz.
-    for(float hz:{10.f,15.f,20.f,30.f,40.f,60.f,80.f,120.f,160.f,320.f,620.f,1200.f,2400.f}){
+    for(float hz:{10.f,15.f,20.f,30.f,40.f,60.f,80.f,120.f,160.f,320.f,620.f,1200.f,2400.f,4000.f,6000.f,8000.f}){
         dub::Siren s;s.set(dub::P_wave,0);s.set(dub::P_delay_mix,0);s.set(dub::P_cutoff,9000);s.set(dub::P_rate,1);s.set(dub::P_pitch,hz);s.set(dub::P_latch,1);
         for(int k=0;k<44100/128*2;++k)s.render(l,r,128);
         int crossings=0;float previous=l[127];
@@ -200,4 +259,4 @@ static void lowPitch(){
     // A waveform change begins with the existing small blend step, not a hard replacement.
     dub::Siren a,b;dry(a);dry(b);a.set(dub::P_latch,1);b.set(dub::P_latch,1);float bl[128],br[128];for(int k=0;k<300;++k){a.render(l,r,128);b.render(bl,br,128);}a.set(dub::P_wave,3);a.render(l,r,128);b.render(bl,br,128);require(std::fabs(l[0]-bl[0])<.02,"active wave switch starts smoothly");
 }
-int main(int argc,char** argv){mapping();simdAccuracy();lowPitch();filterSafety();legacyFixtures();if(argc>1)compatibility(argv[1]);std::printf("PERFORMANCE CONTROLS %s failures=%d\n",failures?"FAIL":"PASS",failures);return failures?1:0;}
+int main(int argc,char** argv){nativePrograms();mapping();simdAccuracy();lowPitch();filterSafety();legacyFixtures();if(argc>1)compatibility(argv[1]);std::printf("PERFORMANCE CONTROLS %s failures=%d\n",failures?"FAIL":"PASS",failures);return failures?1:0;}

@@ -5,7 +5,12 @@ Deck's siren and echo into C++, connected to sd88me's MPC wrapper, parameter
 system, native touchscreen skin, Q-Links and portable installer.
 Attribution and preserved notices are in [NOTICE.md](NOTICE.md) and [VENDORED.md](VENDORED.md).
 
-Version 2.0.0 is a simplified, NEON-optimized rewrite: one page, sixteen Q-Links
+Version 2.1.0 adds all twelve factory sounds to the Force's native **PRESET**
+selector in the top bar and fixes Q-Links on **Track Edit → Automation**.
+Parameter indices, UID and saved 2.0.0 projects stay compatible. Presets use only
+the native top-bar menu; Q-Link 15 is unassigned. Tested on Akai Force software 3.9.1.2 on 2026-10-26; see [2.1.0 installation and test steps](docs/RELEASE_2.1.0.md).
+
+Version 2.0.0 introduced a simplified, NEON-optimized rewrite: one page, sixteen Q-Links
 grouped by function, and only the controls on those knobs plus FIRE, LATCH,
 SIREN/ZAP and STOP. See [installation instructions](docs/INSTALL_FORCE.md) before
 installing. The [1.0.2](dist/Dub-Force-Siren-1.0.2-mpc-armv7.zip),
@@ -17,13 +22,14 @@ installing. The [1.0.2](dist/Dub-Force-Siren-1.0.2-mpc-armv7.zip),
 | Bank | Knobs |
 | --- | --- |
 | 1 · SIREN | 1 Pitch, 2 Wave (OSC) · 3 Rate, 4 Depth, 5 Shape (LFO) · 6 Sweep (ZAP) · 7 Attack, 8 Release (ENVELOPE) |
-| 2 · FX | 9 Cutoff, 10 Resonance (FILTER) · 11 Time, 12 Feedback, 13 Mix, 14 Ping Pong (ECHO) · 15 Patch, 16 Output (MASTER) |
+| 2 · FX | 9 Cutoff, 10 Resonance (FILTER) · 11 Time, 12 Feedback, 13 Mix, 14 Ping Pong (ECHO) · 15 Unassigned, 16 Output (MASTER) |
 
 The top row of the screen is bank 1 and the bottom row bank 2, so each control
 sits above the knob that turns it. Five oscillator waves, four LFO shapes, an
 exponential ZAP, a resonant lowpass, a tape echo with filtered feedback and
-ping-pong, and a compressor/limiter. LFO Depth is a percentage of Pitch, so Pitch
-transposes the whole siren down to 10 Hz. Twelve factory presets.
+ping-pong, and a compressor/limiter. LFO Depth is a percentage of Pitch; the logarithmic PITCH range is 10–8000 Hz.
+At 100% depth the upper sweep reaches 16 kHz. Saved states retain physical Hz;
+existing normalized PITCH automation uses the expanded scale. Twelve factory presets.
 
 ```sh
 ./tools/build.sh host       # desktop Linux .so

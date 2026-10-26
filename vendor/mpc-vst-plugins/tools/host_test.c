@@ -17,9 +17,10 @@ typedef struct { int32_t type,byteSize,deltaFrames,flags,noteLength,noteOffset; 
 typedef struct { int32_t n; intptr_t r; void* ev[2]; } EV;
 extern AEffect* VSTPluginMain(cb);
 
-static int automated[NPARAMS > 0 ? NPARAMS : 1], fails;
+static int automated[NPARAMS > 0 ? NPARAMS : 1], fails, updates;
 static intptr_t host(AEffect*e,int32_t op,int32_t i,intptr_t v,void*p,float o){
     static double ti[16];
+    if (op == 42) updates++;
     if (op == 0 && i >= 0 && i < NPARAMS) automated[i]++;
     if (op == 7) { ti[4] = 120.0; ((int32_t*)&ti[8])[5] = 1 << 10; return (intptr_t)ti; }
     return 0;
@@ -53,6 +54,24 @@ int main(void) {
         a->setP(a, cont, 0.25f); a->d(a, 7, cont, 0, d, 0);
         CHECK(fabsf(a->getP(a, cont) - 0.25f) <= tol, "set %s 0.25 -> get %.3f (\"%s\")", PARAMS[cont].key, a->getP(a, cont), d);
         CHECK(fabsf(b->getP(b, cont) - 0.25f) > 1e-4f || PARAMS[cont].def == 0.25f, "instance b unaffected");
+    }
+    if (cont >= 0 && !PARAMS[cont].refresh_display) {
+        run(a, 40); updates = 0;
+        for (int k = 0; k < 32; k++) {
+            a->setP(a, cont, (k & 1) ? 0.3f : 0.7f); run(a, 1);
+        }
+        CHECK(updates == 0, "32 host writes: %d UpdateDisplay(s), want 0", updates);
+    }
+    for (int i = 0; i < NPARAMS; i++) {
+        if (PARAMS[i].refresh_display || PARAMS[i].step_target >= 0) {
+            run(a, 40); updates = 0;
+            a->setP(a, i, 1.0f);
+            CHECK(updates == 0, "refresh for %s is deferred", PARAMS[i].key);
+            run(a, 1);
+            CHECK(updates == 1, "explicit/step refresh for %s fires once", PARAMS[i].key);
+            run(a, 1);
+            CHECK(updates == 1, "refresh for %s is consumed", PARAMS[i].key);
+        }
     }
     if (en >= 0) {
         int n = PARAMS[en].nopts;
@@ -91,6 +110,18 @@ int main(void) {
         if (pop >= 0) CHECK(!strstr((char *)ch, PARAMS[pop].key), "popup flag not saved in the chunk");
     } else printf("warn no chunk (engine has no \"state\" param)\n");
 
+#ifdef PROG_PARAM
+    CHECK(a->np == NUM_PROGRAMS, "native program count %d", a->np);
+    run(a, 40); updates = 0;
+    memset(automated, 0, sizeof automated);
+    int next_program = ((int)a->d(a, 3, 0, 0, 0, 0) + 1) % NUM_PROGRAMS;
+    a->d(a, 2, 0, next_program, 0, 0);
+    CHECK(updates == 0 && automated[PROG_PARAM] == 0, "native preset host notifications are deferred");
+    run(a, 1);
+    CHECK(updates == 1 && automated[PROG_PARAM] == 1, "native preset refresh and values reach host once");
+    run(a, 1);
+    CHECK(updates == 1 && automated[PROG_PARAM] == 1, "native preset notification consumed");
+#endif
     a->d(a, 1, 0, 0, 0, 0); b->d(b, 1, 0, 0, 0, 0);
     printf("%s\n", fails ? "FAILED" : "PASSED");
     return fails ? 1 : 0;

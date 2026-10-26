@@ -70,6 +70,29 @@ def layout_warnings(cfg):
     return []
 
 
+def check_lock(here, plist):
+    """<port>/params.lock: the parameter keys in VST index order, written on the first build and extended as keys are appended.
+    Saved projects, automation and Q-Link maps store parameters by index, so an existing key that moves (a param inserted
+    mid-list, a reorder) fails the build; a key removed from the end is only a warning. GEN_VST_RELOCK=1 rewrites the file
+    (a deliberate break, before a first release). The layout's hidden popup params come after the list and are not locked."""
+    path = os.path.join(here, "params.lock")
+    keys = [p["key"] for p in plist]
+    if os.path.exists(path) and os.environ.get("GEN_VST_RELOCK") != "1":
+        locked = [k for k in open(path).read().split() if k]
+        for i, k in enumerate(locked):
+            if i >= len(keys):
+                print("warning: params.lock: %d locked key(s) from %r on are gone (removed from the end)" % (len(locked) - i, k),
+                      file=sys.stderr)
+                return
+            if keys[i] != k:
+                sys.exit("params.lock: parameter %d was %r and is now %r. Saved projects, automation and skins bind by index: "
+                         "append new params at the end, never insert or reorder (GEN_VST_RELOCK=1 to accept the break)" % (i, k, keys[i]))
+        if len(keys) == len(locked):
+            return
+    open(path, "w").write("".join(k + "\n" for k in keys))
+    print("params.lock: %d keys" % len(keys))
+
+
 def gen_params(cfg, params, out):
     for w in layout_warnings(cfg):
         print("warning: " + w, file=sys.stderr)
@@ -78,7 +101,7 @@ def gen_params(cfg, params, out):
              "#pragma once",
              "typedef struct { const char *key, *name, *unit; float min, max, def; int nopts; "
              "const char *const *opts; int momentary; int string_display; int int_display; "
-             "int step_target; float step_delta; int popup_of; int hold_ms; int dynamic_name; int dynamic_display; float physical_default; int logarithmic; float log_min, log_span; const int *enum_values; } param_t;"]
+             "int step_target; float step_delta; int popup_of; int hold_ms; int dynamic_name; int dynamic_display; float physical_default; int logarithmic; float log_min, log_span; const int *enum_values; int refresh_display; } param_t;"]
     key_to_index = {p["key"]: i for i, p in enumerate(params)}
     rows = []
     defaults = []
@@ -138,9 +161,17 @@ def gen_params(cfg, params, out):
         logarithmic = p.get("scale") == "log"
         log_min = math.log(lo) if logarithmic else 0
         log_span = math.log(hi / lo) if logarithmic else 0
-        rows[-1] = rows[-1][:-2] + ", %s, %d, %s, %s, %s}," % (
+        rows[-1] = rows[-1][:-2] + ", %s, %d, %s, %s, %s, %d}," % (
             fl(physical_default), logarithmic, fl(log_min), fl(log_span),
-            "VALUES_%d" % i if values is not None else "0")
+            "VALUES_%d" % i if values is not None else "0", int(bool(p.get("refresh_display"))))
+    if cfg.get("programs"):
+        key = cfg["programs"].get("param")
+        if key not in key_to_index or len(params[key_to_index[key]].get("options", [])) < 2:
+            raise SystemExit('programs.param must name a parameter with at least two options')
+        lines += ["#define PROG_PARAM %d" % key_to_index[key],
+                  "#define NUM_PROGRAMS %d" % len(params[key_to_index[key]]["options"])]
+    else:
+        lines += ["#define NUM_PROGRAMS 0"]
     lines += ["static const float PHYSICAL_DEFAULTS[] = {%s};" % ", ".join(defaults)]
     lines += ["static const param_t PARAMS[] = {"] + rows + ["};", "#define NPARAMS %d" % len(params),
               "#define PLUG_NAME %s" % c_str(cfg["name"]), "#define PLUG_VENDOR %s" % c_str(cfg["vendor"]),
@@ -182,6 +213,7 @@ def main():
             print("%s=%s" % (k, shlex.quote(v)))
         return
     plist, sections = params.load(os.path.join(here, src))
+    check_lock(here, plist)
     import shadow_skin
     if cfg.get("layout"):
         plist = plist + shadow_skin.popup_params(os.path.join(here, cfg["layout"]), plist)
