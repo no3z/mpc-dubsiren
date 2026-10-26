@@ -74,7 +74,8 @@ typedef struct {
 } VstTimeInfo;
 
 enum {
-    effOpen = 0, effClose = 1, effGetParamLabel = 6, effGetParamDisplay = 7, effGetParamName = 8,
+    effOpen = 0, effClose = 1, effSetProgram = 2, effGetProgram = 3, effGetProgramName = 5,
+    effGetProgramNameIndexed = 29, effGetParamLabel = 6, effGetParamDisplay = 7, effGetParamName = 8,
     effSetSampleRate = 10, effSetBlockSize = 11, effMainsChanged = 12, effGetChunk = 23,
     effSetChunk = 24, effProcessEvents = 25, effCanBeAutomated = 26, effString2Parameter = 27, effGetPlugCategory = 35,
     effGetEffectName = 45, effGetVendorString = 47, effGetProductString = 48,
@@ -96,6 +97,7 @@ typedef struct {
     atomic_int holdFrames[NPARAMS];  /* control/audio threads: lock-free atomic countdown */
     _Atomic float shadow[NPARAMS];   /* unrounded position last set on an integer param; <0 = none */
     signed char last_on[NPARAMS];  /* last "<key>_on" value told to the host, +1 (0 = unknown) */
+    atomic_char program_changed; /* deferred notification after a native preset selection */
     atomic_char need_update_display;  /* deferred audioMasterUpdateDisplay -- see setParameter() */
     _Atomic float open[NPARAMS];     /* popup "open" flags: control/audio-safe */
     char chunk[8192];
@@ -219,7 +221,10 @@ static void setParameter(AEffect *e, int32_t i, float n) {
     w->shadow[i] = (p->int_display && !p->nopts) ? clamp01(n) : -1;
     if (PARAMS[i].momentary && n > 0.5f) w->holdFrames[i] = PARAMS[i].hold_ms > 0 ? (int)(PARAMS[i].hold_ms * 44.1f) : 1;
     if (!nudge) popup_picked(w->open, w->holdFrames, i);   /* a list pick closes it; a Q-Link nudge doesn't */
-    w->need_update_display = 1;   /* deferred to processReplacing(), see the step_target branch above */
+    /* MPC rebuilds its automation screen on UpdateDisplay, interrupting Q-Link
+     * writes. Only request it for unpolled text depending on this parameter.
+     * Keep the step_target notification above and defer host calls as before. */
+    if (p->refresh_display) w->need_update_display = 1;
 }
 
 static float getParameter(AEffect *e, int32_t i) { return get_norm(e->object, i); }
@@ -265,6 +270,10 @@ static void housekeeping(AEffect *e, int32_t n) {
                 if (!next) w->master(&w->fx, audioMasterAutomate, i, 0, 0, 0.0f);
             }
         }
+    }
+    if (atomic_exchange_explicit(&w->program_changed, 0, memory_order_relaxed)) {
+        for (int i = 0; i < NPARAMS; i++)
+            if (!popup_is(i)) w->master(e, audioMasterAutomate, i, 0, 0, get_norm(w, i));
     }
     if (atomic_exchange_explicit(&w->need_update_display, 0, memory_order_relaxed)) {
         w->master(&w->fx, audioMasterUpdateDisplay, 0, 0, 0, 0.0f);
@@ -334,12 +343,42 @@ static void copy_str(void *dst, const char *src, size_t max) {
 static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void *p, float o) {
     wrap_t *w = e->object;
     (void)o;
-    if ((op == effGetEffectName || op == effGetProductString || op == effGetVendorString ||
+    if ((op == effGetProgramName || op == effGetProgramNameIndexed ||
+         op == effGetEffectName || op == effGetProductString || op == effGetVendorString ||
          op == effGetParamName || op == effGetParamLabel || op == effGetParamDisplay ||
          op == effProcessEvents || op == effCanDo || op == effGetChunk || op == effSetChunk || op == effString2Parameter) && !p)
         return 0;
     switch (op) {
     case effOpen: return 1;
+    case effGetProgram:
+#ifdef PROG_PARAM
+        return lroundf(get_norm(w, PROG_PARAM) * (NUM_PROGRAMS - 1));
+#else
+        return 0;
+#endif
+    case effSetProgram:
+#ifdef PROG_PARAM
+        if (v < 0 || v >= NUM_PROGRAMS) return 0;
+        /* JUCE reselects the current program while loading a project. Preserve edits. */
+        if (v == lroundf(get_norm(w, PROG_PARAM) * (NUM_PROGRAMS - 1))) return 1;
+        setParameter(e, PROG_PARAM, (float)v / (NUM_PROGRAMS - 1));
+        w->program_changed = 1;
+        w->need_update_display = 1;
+        return 1;
+#else
+        return 0;
+#endif
+    case effGetProgramName:
+    case effGetProgramNameIndexed:
+#ifdef PROG_PARAM
+        if (op == effGetProgramName) idx = lroundf(get_norm(w, PROG_PARAM) * (NUM_PROGRAMS - 1));
+        if (idx < 0 || idx >= NUM_PROGRAMS) { ((char *)p)[0] = 0; return 0; }
+        copy_str(p, PARAMS[PROG_PARAM].opts[idx], 24);
+        return 1;
+#else
+        ((char *)p)[0] = 0;
+        return 0;
+#endif
     case effClose:
         g_api->destroy(w->dsp);
         free(w);
@@ -458,6 +497,7 @@ __attribute__((visibility("default"))) AEffect *VSTPluginMain(audioMasterCallbac
     wrap_t *w = calloc(1, sizeof *w);
     if (!w) return NULL;
     atomic_init(&w->need_update_display, 0);
+    atomic_init(&w->program_changed, 0);
     for (int i = 0; i < NPARAMS; i++) {
         atomic_init(&w->shadow[i], -1);
         atomic_init(&w->holdFrames[i], 0);
@@ -483,6 +523,7 @@ __attribute__((visibility("default"))) AEffect *VSTPluginMain(audioMasterCallbac
     e->getParameter = getParameter;
     e->processReplacing = processReplacing;
     e->numParams = NPARAMS;
+    e->numPrograms = NUM_PROGRAMS;
 #ifdef PLUG_EFFECT
     e->numInputs = 2;
     e->numOutputs = 2;

@@ -60,6 +60,41 @@ static void migrated(AEffect* a,const std::string& saved){
     require(std::fabs(hz-expected)<=expected*1e-5f+1e-4f,"legacy Hz depth becomes the same sweep as a pitch percentage");
     name(a,dub::P_wave,legacyWaveNames[int(old.at("wave"))]);
 }
+static void nativePrograms(){
+    AEffect* a=VSTPluginMain(host);AEffect* b=VSTPluginMain(host);
+    require(a && b,"native program instances");if(!a||!b)return;
+    require(a->numPrograms==12,"twelve programs in native PRESET menu");
+    require(a->version==2100,"2.1.0 VST version");
+    for(int i=0;i<12;++i){
+        char label[24]={};
+        require(a->dispatcher(a,29,i,0,label,0)==1,"indexed program name accepted");
+        require(!std::strcmp(label,PARAMS[dub::P_preset].opts[i]),"native program name matches factory preset");
+        // Force a different selection first: reselecting the current program preserves edits.
+        a->dispatcher(a,2,0,(i+1)%12,nullptr,0);
+        require(a->dispatcher(a,2,0,i,nullptr,0)==1,"native program selection accepted");
+        b->setParameter(b,dub::P_preset,i/11.f);
+        require(physical(chunk(a))==physical(chunk(b)),"native program equals existing factory snapshot");
+        require(a->dispatcher(a,3,0,0,nullptr,0)==i,"native program readback");
+        a->dispatcher(a,5,0,0,label,0);
+        require(!std::strcmp(label,PARAMS[dub::P_preset].opts[i]),"current native program name");
+        a->setParameter(a,dub::P_pitch,.123f);auto saved=chunk(a);
+        a->dispatcher(a,2,0,i,nullptr,0);
+        require(chunk(a)==saved,"host program reselect preserves custom edits");
+        b->dispatcher(b,24,0,saved.size(),const_cast<char*>(saved.data()),0);
+        require(b->dispatcher(b,3,0,0,nullptr,0)==i && chunk(b)==saved,"program and edits survive chunk restore");
+    }
+    a->setParameter(a,dub::P_preset,3/11.f);
+    require(a->dispatcher(a,3,0,0,nullptr,0)==3,"Q-Link preset selection follows native menu");
+    auto saved=chunk(a);char label[24];
+    for(int i:{-1,12,999}){
+        require(a->dispatcher(a,2,0,i,nullptr,0)==0,"invalid program selection rejected");
+        require(a->dispatcher(a,29,i,0,label,0)==0,"invalid program name rejected");
+        require(chunk(a)==saved,"invalid program leaves sound unchanged");
+    }
+    require(a->dispatcher(a,5,0,0,nullptr,0)==0,"NULL program name buffer rejected");
+    close(a);close(b);
+    std::puts("NATIVE PROGRAMS: 12 factory snapshots, menu/Q-Link sync, edits and restore checked");
+}
 static void mapping(){
     AEffect* a=VSTPluginMain(host);require(a!=nullptr,"controls instance");if(!a)return;
     const char* waves[]={"SINE","TRIANGLE","SAW","SQUARE","NOISE"};
@@ -200,4 +235,4 @@ static void lowPitch(){
     // A waveform change begins with the existing small blend step, not a hard replacement.
     dub::Siren a,b;dry(a);dry(b);a.set(dub::P_latch,1);b.set(dub::P_latch,1);float bl[128],br[128];for(int k=0;k<300;++k){a.render(l,r,128);b.render(bl,br,128);}a.set(dub::P_wave,3);a.render(l,r,128);b.render(bl,br,128);require(std::fabs(l[0]-bl[0])<.02,"active wave switch starts smoothly");
 }
-int main(int argc,char** argv){mapping();simdAccuracy();lowPitch();filterSafety();legacyFixtures();if(argc>1)compatibility(argv[1]);std::printf("PERFORMANCE CONTROLS %s failures=%d\n",failures?"FAIL":"PASS",failures);return failures?1:0;}
+int main(int argc,char** argv){nativePrograms();mapping();simdAccuracy();lowPitch();filterSafety();legacyFixtures();if(argc>1)compatibility(argv[1]);std::printf("PERFORMANCE CONTROLS %s failures=%d\n",failures?"FAIL":"PASS",failures);return failures?1:0;}

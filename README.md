@@ -5,7 +5,13 @@ Deck's siren and echo into C++, connected to sd88me's MPC wrapper, parameter
 system, native touchscreen skin, Q-Links and portable installer.
 Attribution and preserved notices are in [NOTICE.md](NOTICE.md) and [VENDORED.md](VENDORED.md).
 
-Version 2.0.0 is a simplified, NEON-optimized rewrite: one page, sixteen Q-Links
+Version 2.1.0 adds all twelve factory sounds to the Force's native **PRESET**
+selector in the top bar and fixes Q-Links on **Track Edit → Automation**.
+Parameter indices, UID and saved 2.0.0 projects stay compatible. The existing
+PATCH control selects the same sounds. This is a candidate pending device
+validation; see [2.1.0 installation and test steps](docs/RELEASE_2.1.0.md).
+
+Version 2.0.0 introduced a simplified, NEON-optimized rewrite: one page, sixteen Q-Links
 grouped by function, and only the controls on those knobs plus FIRE, LATCH,
 SIREN/ZAP and STOP. See [installation instructions](docs/INSTALL_FORCE.md) before
 installing. The [1.0.2](dist/Dub-Force-Siren-1.0.2-mpc-armv7.zip),

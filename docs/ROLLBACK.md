@@ -1,5 +1,9 @@
 # Plugin-only rollback
 
+For 2.1.0 → 2.0.0, use the retained 2.0.0 package installer as described in
+[the 2.1.0 upgrade guide](RELEASE_2.1.0.md#restore-200-if-needed). This preserves
+unrelated live settings. The helper script below supports 1.0.x backups only.
+
 ## 2.0.0 → 1.0.2
 
 Make the `1.0.2-before-2.0.0` backup described in [INSTALL_FORCE.md](INSTALL_FORCE.md)

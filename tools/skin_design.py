@@ -406,6 +406,7 @@ def validate(folder, plist, skin):
 def main():
     cfg = gen_vst.load(str(ROOT / "vst.json"))
     plist, _ = parameter_source.load(str(ROOT / "params.json"))
+    gen_vst.check_lock(str(ROOT), plist)
     popup = shadow_skin.popup_params(str(ROOT / "layout.conf"), plist)
     assert [p["key"] for p in popup] == [k + "__open" for k in POPUPS], "Popup IDs must stay stable"
     plist = plist + popup

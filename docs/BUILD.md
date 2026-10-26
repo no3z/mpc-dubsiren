@@ -112,3 +112,30 @@ See [PERFORMANCE.md](PERFORMANCE.md) for measured results and approximations.
 Release-candidate clean-build commands, exact toolchain and matching 1.0.1
 checksums are in [REPRODUCIBILITY.md](REPRODUCIBILITY.md). State, UI and long-run
 hardening results are in [RELEASE_CANDIDATE.md](RELEASE_CANDIDATE.md).
+
+## 2.1.0 wrapper and native PRESET menu
+
+Plain host writes no longer schedule UpdateDisplay (upstream #486). The generated
+`refresh_display` field opts a selector in only when unpolled text depends on it;
+none of this port's production parameters requires that opt-in. Steppers keep
+their deferred refresh. `params.lock` locks the twenty published parameter keys;
+hidden popup IDs still follow the unchanged ordered layout. Both the compiler
+and custom skin entrypoints check the lock.
+
+`vst.json` programs.param points to `preset`. The wrapper exposes its twelve
+options through VST numPrograms, set/get program, current and indexed program
+names, which populates MPC/Force's top-bar PRESET selector. Selection uses the
+same factory snapshot as PATCH. Reselecting the current native program preserves
+custom edits during JUCE project loading. Native selection defers parameter
+notifications and display refresh until processing; PATCH writes retain the
+Q-Link fix. No new parameter indices or state format are introduced.
+
+`./tools/build.sh test` also runs `tests/wrapper_contracts.py`, using a temporary
+port to exercise explicit refresh and steppers without changing production
+parameters. `vendor/mpc-vst-plugins/tools/test_port.sh vst.json` runs the compatible
+port host test. Performance controls check every native program, snapshot parity,
+menu/PATCH readback, chunk restore, invalid indices and preservation of edits.
+
+Without ARM binfmt registration, provide an existing ARM user emulator explicitly:
+`DUB_QEMU_ARM=/work/build/qemu-arm-static ./tools/build.sh arm-test`. The path is
+inside the container. No emulator is shipped in the release ZIP.
